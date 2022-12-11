@@ -1,7 +1,8 @@
 """
 This program downloads stock data, normalizes the data, and saves it to a MS SQL database
 
-1. Write a function in Python called load_index_data that takes a list of index symbols and a date range and gets historical OHLC data from Yahoo! Finance for each index for given date range.
+1. Write a function in Python called load_index_data that takes a list of index symbols and a date 
+range and gets historical OHLC data from Yahoo! Finance for each index for given date range.
     - Use yfinance
     - Save stock name and OHLC data in a dataframe
 	- adjust all OHLC
@@ -9,16 +10,19 @@ This program downloads stock data, normalizes the data, and saves it to a MS SQL
 		- Set 'Adj_High' = 'High' / 'Close' * 'Adj Close'
 		- Set 'Adj_Low'  = 'Low'  / 'Close' * 'Adj Close'
 		- Set 'Adj_Volume'  = 'Volume'  / 'Adj Close' * 'Close'
-    - Normalize 'Adj_Close', 'Adj_High', 'Adj_Low', 'Adj_Open', 'Adj_Volume' between 0.0 and 1.0 and Prefix normalized data with "Norm_"
+    - Normalize 'Adj_Close', 'Adj_High', 'Adj_Low', 'Adj_Open', 'Adj_Volume' between 0.0 and 1.0 
+    and Prefix normalized data with "Norm_"
     - Return the data
-2. Write a function in Python called get_configuration_parameters that reads the user_id, password, server, and database from the "sql database" stanza in a configuration file.
+2. Write a function in Python called get_configuration_parameters that reads the user_id, password, 
+server, and database from the "sql database" stanza in a configuration file.
 	- If file does not exists, create it using the following values as the default values
 		- user_id = 'egarrity'
 		- password = 'test'
 		- server = 'local'
 		- database = 'SOS'
 3. Write a function in Python called save_to_sql that saves the data to a MS SQL table
-    - Create a connection_url using the user_id, password, server, and database from function get_configuration_parameters
+    - Create a connection_url using the user_id, password, server, and database from function 
+    get_configuration_parameters
     - Create a connection to a MS SQL database using the connection_url
 	- Erase all rows from the the MS SQL table StockData if it already exist
     - Save all data to MS SQL table StockData in the database
@@ -101,7 +105,7 @@ def save_to_sql(data):
 
 if __name__ == '__main__':
     # download data
-    data = load_index_data(['AAPL'], '2020-01-01', '2020-04-30')
+    stock_data = load_index_data(['AAPL'], '2020-01-01', '2020-04-30')
 
     # save data to sql
-    save_to_sql(data)
+    save_to_sql(stock_data)

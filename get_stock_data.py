@@ -105,7 +105,7 @@ def save_to_sql(data):
 
 if __name__ == '__main__':
     # download data
-    stock_data = load_index_data(['AAPL'], '2020-01-01', '2020-04-30')
+    stock_data = load_index_data(['AAPL','FXAIX'], '2020-01-01', '2020-12-31')
 
     # save data to sql
     save_to_sql(stock_data)

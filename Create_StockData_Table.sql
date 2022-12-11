@@ -9,7 +9,7 @@ SET QUOTED_IDENTIFIER ON
 GO
 
 CREATE TABLE [dbo].[StockData](
-	[Stock] [varchar](11) NULL
+	[Stock] [varchar](11) NULL,
 	[Date] [datetime] NULL,
 	[Open] [float] NULL,
 	[High] [float] NULL,

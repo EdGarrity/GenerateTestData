@@ -103,7 +103,7 @@ def save_to_sql(data):
     # save all data to MS SQL table StockData in the database
     data.to_sql('StockData', engine, if_exists='append')
 
-def run():
+def get():
     """
     This program downloads stock data, normalizes the data, and saves it to a MS SQL database
     """

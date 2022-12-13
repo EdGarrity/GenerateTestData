@@ -28,11 +28,9 @@ server, and database from the "sql database" stanza in a configuration file.
     - Save all data to MS SQL table StockData in the database
 """
 
-import os
 import configparser
 import yfinance as yf
 import pandas as pd
-import numpy as np
 import sqlalchemy
 
 def load_index_data(index_symbols, start_date, end_date):

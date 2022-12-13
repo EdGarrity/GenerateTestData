@@ -1,0 +1,8 @@
+"""
+This program downloads stock data, normalizes the data, and saves it to a MS SQL database
+"""
+import src.get_stock_data
+
+if __name__ == '__main__':
+    src.get_stock_data.run()
+    

@@ -103,9 +103,12 @@ def save_to_sql(data):
     # save all data to MS SQL table StockData in the database
     data.to_sql('StockData', engine, if_exists='append')
 
-if __name__ == '__main__':
+def run():
+    """
+    This program downloads stock data, normalizes the data, and saves it to a MS SQL database
+    """
     # download data
-    stock_data = load_index_data(['AAPL','FXAIX'], '2020-01-01', '2020-12-31')
+    stock_data = load_index_data(['AAPL', 'FXAIX'], '2020-01-01', '2020-12-31')
 
     # save data to sql
     save_to_sql(stock_data)

@@ -110,3 +110,5 @@ def get():
 
     # save data to sql
     save_to_sql(stock_data)
+
+    return (stock_data)

@@ -9,6 +9,7 @@ SET QUOTED_IDENTIFIER ON
 GO
 
 CREATE TABLE [dbo].[TestData](
+	[index] [int] null,
 	[Stock] [varchar](11) NULL,
 	[Date] [datetime] NULL,
 	[Key] [varchar](10) NULL,

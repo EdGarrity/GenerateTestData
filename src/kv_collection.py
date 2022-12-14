@@ -23,6 +23,9 @@ import sqlalchemy
 
 
 def ensure_data_frame(fn):
+    """
+    This function the stock data into the KV Collection
+    """
     def wrapper(df1, df2):
         return fn(pd.DataFrame(df1),pd.DataFrame(df2))
     return wrapper
@@ -34,24 +37,40 @@ def load_stock_data(stock_data, test_data):
     This function the stock data into the KV Collection
     """
 
+    records = []
+    
     for index, row in stock_data.iterrows():
-        new_record = {'Stock': row['Stock'], 'Date': row['Date'],'Key': 'Close', 'Value': row['Close']}
-        test_data = test_data.append(new_record, ignore_index=True)
+        # write open
+        new_record = [row['Stock'], row.name, 'Open', row['Norm_Adj_Open']]
+        records.append(new_record)
+    
+        # write high
+        new_record = [row['Stock'], row.name, 'High', row['Norm_Adj_High']]
+        records.append(new_record)
+    
+        # write low
+        new_record = [row['Stock'], row.name, 'Low', row['Norm_Adj_Low']]
+        records.append(new_record)
+    
+        # write close
+        new_record = [row['Stock'], row.name, 'Close', row['Norm_Adj_Close']]
+        records.append(new_record)
 
+        # write volume
+        new_record = [row['Stock'], row.name, 'Volume', row['Norm_Adj_Volume']]
+        records.append(new_record)
+
+    test_data = pd.DataFrame.from_records(
+        records, columns=['Stock', 'Date', 'Key', 'Value'])
+    
     return test_data
  
-def test_populate_stock():
-    stock_data = pd.DataFrame({'Stock': ['AAPL', 'AAPL', 'AAPL'], 'Date': ['2017-01-01', '2017-01-02', '2017-01-03'], 'Close': [100, 101, 102]})
-    test_data = pd.DataFrame(columns=['Stock', 'Date', 'Key', 'Value'])
-    test_data = load_stock_data(stock_data, test_data)
-    print(test_data)
-
-
 def get_configuration_parameters():
     """
     This function reads the user_id, password, server, and database from the "sql database" stanza in a configuration file.
     :return: user_id, password, server, and database
     """
+
     # read configuration file
     config = configparser.ConfigParser()
     config.read('config.ini')
@@ -80,6 +99,9 @@ def save_to_sql(data):
 
     # create connection
     engine = sqlalchemy.create_engine(connection_url)
+
+    # erase all rows from the the MS SQL table StockData if it already exist
+    engine.execute('DELETE FROM TestData')
 
     # save all data to MS SQL table StockData in the database
     data.to_sql('TestData', engine, if_exists='append')

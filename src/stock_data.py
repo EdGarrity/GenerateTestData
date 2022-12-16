@@ -28,11 +28,9 @@ server, and database from the "sql database" stanza in a configuration file.
     - Save all data to MS SQL table StockData in the database
 """
 
-import os
 import configparser
 import yfinance as yf
 import pandas as pd
-import numpy as np
 import sqlalchemy
 
 def load_index_data(index_symbols, start_date, end_date):
@@ -103,7 +101,7 @@ def save_to_sql(data):
     # save all data to MS SQL table StockData in the database
     data.to_sql('StockData', engine, if_exists='append')
 
-def run():
+def get():
     """
     This program downloads stock data, normalizes the data, and saves it to a MS SQL database
     """
@@ -112,3 +110,5 @@ def run():
 
     # save data to sql
     save_to_sql(stock_data)
+
+    return (stock_data)

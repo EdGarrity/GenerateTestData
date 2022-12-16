@@ -54,12 +54,24 @@ def load_index_data(index_symbols, start_date, end_date):
     data['Adj_Low'] = data['Low'] / data['Close'] * data['Adj Close']
     data['Adj_Volume'] = data['Volume'] / data['Adj Close'] * data['Close']
 
+    # get min and max of OHLC columns
+    data['Min'] = data[['Open', 'High', 'Low', 'Close']].min(axis=1)
+    data['Max'] = data[['Open', 'High', 'Low', 'Close']].max(axis=1)
+
+    ohlc_min = data['Min'].min()
+    ohlc_max = data['Max'].max()
+    ohlc_delta = ohlc_max - ohlc_min
+
     # normalize data
-    data['Norm_Adj_Close'] = (data['Adj Close'] - data['Adj Close'].min()) / (data['Adj Close'].max() - data['Adj Close'].min())
-    data['Norm_Adj_High'] = (data['Adj_High'] - data['Adj_High'].min()) / (data['Adj_High'].max() - data['Adj_High'].min())
-    data['Norm_Adj_Low'] = (data['Adj_Low'] - data['Adj_Low'].min()) / (data['Adj_Low'].max() - data['Adj_Low'].min())
-    data['Norm_Adj_Open'] = (data['Adj_Open'] - data['Adj_Open'].min()) / (data['Adj_Open'].max() - data['Adj_Open'].min())
+    data['Norm_Adj_Close'] = (data['Adj Close'] - ohlc_min) / ohlc_delta
+    data['Norm_Adj_High'] = (data['Adj_High'] - ohlc_min) / ohlc_delta
+    data['Norm_Adj_Low'] = (data['Adj_Low'] - ohlc_min) / ohlc_delta
+    data['Norm_Adj_Open'] = (data['Adj_Open'] - ohlc_min) / ohlc_delta
     data['Norm_Adj_Volume'] = (data['Adj_Volume'] - data['Adj_Volume'].min()) / (data['Adj_Volume'].max() - data['Adj_Volume'].min())
+
+    # drop temp columns
+    data = data.drop(['Min'], axis=1)
+    data = data.drop(['Max'], axis=1)
 
     return data
 

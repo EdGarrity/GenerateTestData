@@ -5,6 +5,8 @@ import pandas as pd
 import src.stock_data
 import src.kv_collection
 
+
+
 if __name__ == '__main__':
     test_data = pd.DataFrame(columns=['Stock', 'Date', 'Key', 'Value'])
 

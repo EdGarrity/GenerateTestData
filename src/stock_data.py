@@ -62,6 +62,9 @@ def load_index_data(index_symbols, start_date, end_date):
     ohlc_max = data['Max'].max()
     ohlc_delta = ohlc_max - ohlc_min
 
+    print(ohlc_min)
+    print(ohlc_max)
+    
     # normalize data
     data['Norm_Adj_Close'] = (data['Adj Close'] - ohlc_min) / ohlc_delta
     data['Norm_Adj_High'] = (data['Adj_High'] - ohlc_min) / ohlc_delta
@@ -121,6 +124,6 @@ def get():
     stock_data = load_index_data(['AAPL', 'FXAIX'], '2020-01-01', '2020-12-31')
 
     # save data to sql
-    save_to_sql(stock_data)
+    # save_to_sql(stock_data)
 
     return (stock_data)

@@ -84,9 +84,27 @@ def load_index_data(index_symbols, start_date, end_date):
     data['Norm_Adj_Volume'] = (data['Adj_Volume'] - data['Adj_Volume'].min()) / (data['Adj_Volume'].max() - data['Adj_Volume'].min())
 
     for stock in index_symbols:
-        data['Norm_Adj_Close'][data['Stock'] == stock] \
-        = (data['Adj Close'][data['Stock'] == stock] - data['Adj_Low'][data['Stock'] == stock].min()) \
-        / (data['Adj_High'][data['Stock'] == stock].max() - data['Adj_Low'][data['Stock'] == stock].min())
+        mask = data['Stock'] == stock
+
+        data.loc[mask, 'Norm_Adj_Close']  \
+            = (data.loc[mask, 'Adj Close'] - data.loc[mask, 'Adj_Low'].min()) \
+            / (data.loc[mask, 'Adj_High'].max() - data.loc[mask, 'Adj_Low'].min())
+
+        data.loc[mask, 'Norm_Adj_High']  \
+            = (data.loc[mask, 'Adj_High'] - data.loc[mask, 'Adj_Low'].min()) \
+            / (data.loc[mask, 'Adj_High'].max() - data.loc[mask, 'Adj_Low'].min())
+
+        data.loc[mask, 'Norm_Adj_Low']  \
+            = (data.loc[mask, 'Adj_Low'] - data.loc[mask, 'Adj_Low'].min()) \
+            / (data.loc[mask, 'Adj_High'].max() - data.loc[mask, 'Adj_Low'].min())
+
+        data.loc[mask, 'Norm_Adj_Open']  \
+            = (data.loc[mask, 'Adj_Open'] - data.loc[mask, 'Adj_Low'].min()) \
+            / (data.loc[mask, 'Adj_High'].max() - data.loc[mask, 'Adj_Low'].min())
+
+        data.loc[mask, 'Norm_Adj_Volume']  \
+            = (data.loc[mask, 'Adj_Volume'] - data.loc[mask, 'Adj_Volume'].min()) \
+            / (data.loc[mask, 'Adj_Volume'].max() - data.loc[mask, 'Adj_Volume'].min())
 
     # drop temp columns
     data = data.drop(['Min'], axis=1)
@@ -140,6 +158,6 @@ def get():
     stock_data = load_index_data(['AAPL', 'FXAIX'], '2020-01-01', '2020-12-31')
 
     # save data to sql
-    # save_to_sql(stock_data)
+    save_to_sql(stock_data)
 
     return (stock_data)

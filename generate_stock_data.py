@@ -16,4 +16,6 @@ if __name__ == '__main__':
     test_data = src.kv_collection.load_stock_data(stock_data, test_data)
     src.kv_collection.save_to_sql(test_data)
 
-    print (stock_data.columns.tolist())
+    # print(stock_data.columns.tolist())
+    # print(stock_data.index.tolist())
+    # print(stock_data)

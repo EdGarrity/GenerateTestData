@@ -95,12 +95,12 @@ def calculate_obv(stock_data):
     stock_data['obv'] = 0
     
     # create datafram to hold new stock_data
-    combined_df = pd.DataFrame()
+    df_list = list()
     
     for stock in list_stocks(stock_data):
         # Filter the dataframe to include only rows where the 'stock' column is the selected stock
         subdata = stock_data[stock_data['Stock'] == stock]
-        
+            
         # Create variable to remember the previous volume
         prev_volume = 0
   
@@ -114,14 +114,12 @@ def calculate_obv(stock_data):
             # If this is not the first row, set the 'obv' value to the current 'volume' minus the previous 'volume'
             else:
                 subdata.at[i, 'obv'] = row['Norm_Adj_Volume'] - prev_volume
-    
-        # Join the two dataframes using the 'outer' join method
-        if is_stock_data_empty(combined_df):
-            combined_df = subdata
+
+            df_list.append(subdata)
             
-        else:
-            combined_df = pd.merge(combined_df, subdata, how='outer')
-  
+        # combine all dataframes into a single dataframe
+        combined_df = pd.concat(df_list)
+    
     # Return the modified dataframe
     return combined_df
 

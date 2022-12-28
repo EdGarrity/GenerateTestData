@@ -2,7 +2,8 @@
 Table stock_data, columns = [Stock, Date, Close]
 Table test_data, columns = [Stock, Date, Key, Value]
 
-1. Write a function in Python called populate_stock that takes two pandas_datareader objects: stock_data table and test_data
+1. Write a function in Python called populate_stock that takes two pandas_datareader objects:
+   stock_data table and test_data
 	1. For each record in stock_data:
 		1. Create a new record and populate the fields of the new record as follows:
 			1. Set the Stock field of the new record to the value of the Stock field in the stock_data table
@@ -10,7 +11,7 @@ Table test_data, columns = [Stock, Date, Key, Value]
 			3. Set the Key field of the new record to 'Close'
 			4. Set the Value field of the new record to the value of the Close field in the  table stock_data
 		2. Append the new record to the test_data table
-	2. return test_data 
+	2. return test_data
 2. Write a function in Python called test_populate_stock that does the following:
 	1. Creates a stock_data table with test data
 	2. Creates an emtpy test_data table
@@ -25,21 +26,21 @@ import sqlalchemy
 def list_columns(dataframe):
     """
     Lists all the columns found in a pandas data record except for the specified columns
-    
+
     Args:
         pandas data record
 
     Returns:
         list of found columns
-        
-    This function takes a pandas dataframe as input and returns a list of the columns in the 
-    dataframe that are not in the list of excluded columns. The list of excluded columns is 
-    hardcoded in the function, so if you want to exclude different columns, you will need to 
+
+    This function takes a pandas dataframe as input and returns a list of the columns in the
+    dataframe that are not in the list of excluded columns. The list of excluded columns is
+    hardcoded in the function, so if you want to exclude different columns, you will need to
     modify this list.
 
-    To use this function, you would pass a pandas dataframe as an argument when calling the 
+    To use this function, you would pass a pandas dataframe as an argument when calling the
     function, like this:
-    
+
         columns = list_columns(dataframe)
     """
 
@@ -49,56 +50,13 @@ def list_columns(dataframe):
     columns = [column for column in all_columns if column not in excluded_columns]
     return columns
 
-# def ensure_data_frame(fn):
-#     """
-#     This function the stock data into the KV Collection
-#     """
-#     def wrapper(df1, df2):
-#         return fn(pd.DataFrame(df1),pd.DataFrame(df2))
-#     return wrapper
-
-
-# @ensure_data_frame
-# def load_stock_data(stock_data, test_data):
-#     """
-#     This function the stock data into the KV Collection
-#     """
-
-#     records = []
-    
-#     for index, row in stock_data.iterrows():
-#         # write open
-#         new_record = [row['Stock'], row.name, 'Open', row['Norm_Adj_Open']]
-#         records.append(new_record)
-    
-#         # write high
-#         new_record = [row['Stock'], row.name, 'High', row['Norm_Adj_High']]
-#         records.append(new_record)
-    
-#         # write low
-#         new_record = [row['Stock'], row.name, 'Low', row['Norm_Adj_Low']]
-#         records.append(new_record)
-    
-#         # write close
-#         new_record = [row['Stock'], row.name, 'Close', row['Norm_Adj_Close']]
-#         records.append(new_record)
-
-#         # write volume
-#         new_record = [row['Stock'], row.name, 'Volume', row['Norm_Adj_Volume']]
-#         records.append(new_record)
-
-#     test_data = pd.DataFrame.from_records(
-#         records, columns=['Stock', 'Date', 'Key', 'Value'])
-    
-#     return test_data
- 
 def load_stock_data(stock_data, test_data):
     """
     This function the stock data into the KV Collection
     """
 
     records = []
-    
+
     for col_name in list_columns(stock_data):
         for index, row in stock_data.iterrows():
             # write open
@@ -107,13 +65,15 @@ def load_stock_data(stock_data, test_data):
 
     test_data = pd.DataFrame.from_records(
         records, columns=['Stock', 'Date', 'Key', 'Value'])
-    
+
     return test_data
 
 def get_configuration_parameters():
     """
-    This function reads the user_id, password, server, and database from the "sql database" stanza in a configuration file.
-    :return: user_id, password, server, and database
+    This function reads the user_id, password, server, and database from the "sql database" stanza
+    in a configuration file.
+
+    return: user_id, password, server, and database
     """
 
     # read configuration file
@@ -150,6 +110,3 @@ def save_to_sql(data):
 
     # save all data to MS SQL table StockData in the database
     data.to_sql('TestData', engine, if_exists='append')
-
-    print (data)
-    

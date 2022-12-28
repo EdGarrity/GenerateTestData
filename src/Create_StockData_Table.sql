@@ -11,6 +11,7 @@ GO
 CREATE TABLE [dbo].[StockData](
 	[Stock] [varchar](11) NULL,
 	[Date] [datetime] NULL,
+	[DTS] [datetime] NULL,
 	[Open] [float] NULL,
 	[High] [float] NULL,
 	[Low] [float] NULL,

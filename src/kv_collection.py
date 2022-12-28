@@ -102,8 +102,7 @@ def load_stock_data(stock_data, test_data):
     for col_name in list_columns(stock_data):
         for index, row in stock_data.iterrows():
             # write open
-            # new_record = [row['Stock'], row.name, col_name, row[col_name]]
-            new_record = [row['Stock'], index, col_name, row[col_name]]
+            new_record = [row['Stock'], row.name, col_name, row[col_name]]
             records.append(new_record)
 
     test_data = pd.DataFrame.from_records(

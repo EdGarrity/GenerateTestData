@@ -47,9 +47,6 @@ def list_stocks(data):
     # Get a list of the unique values in the 'stock' column
     unique_stocks = stock_column.unique()
 
-    # Print the list of unique stocks
-    print(unique_stocks)
-
     return unique_stocks
 
 def sort_data(dataframe):
@@ -161,6 +158,16 @@ def generate(stock_data):
         stock_data, '50_day_ma', 'Norm_Adj_Close', 50)
     stock_data = calculate_simple_moving_average(
         stock_data, '200_day_ma', 'Norm_Adj_Close', 200)
+
     stock_data = calculate_obv(stock_data)
+
+    stock_data = calculate_simple_moving_average(
+        stock_data, '5_day_obv_ma', 'obv', 5)
+    stock_data = calculate_simple_moving_average(
+        stock_data, '10_day_obv_ma', 'obv', 10)
+    stock_data = calculate_simple_moving_average(
+        stock_data, '50_day_obv_ma', 'obv', 50)
+    stock_data = calculate_simple_moving_average(
+        stock_data, '200_day_obv_ma', 'obv', 200)
 
     return stock_data

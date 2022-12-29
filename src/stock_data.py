@@ -54,36 +54,6 @@ def load_index_data(index_symbols, start_date, end_date):
     data['Adj_Low'] = data['Low'] / data['Close'] * data['Adj Close']
     data['Adj_Volume'] = data['Volume'] / data['Adj Close'] * data['Close']
 
-    # get min and max of OHLC columns
-    data['Min'] = data[['Open', 'High', 'Low', 'Close']].min(axis=1)
-    data['Max'] = data[['Open', 'High', 'Low', 'Close']].max(axis=1)
-
-    ohlc_min = data['Low'].min()
-    ohlc_max = data['High'].max()
-    ohlc_delta = ohlc_max - ohlc_min
-
-    # Print the minimum 'Adj_Low' and maximum 'Adj_High' for 'AAPL'
-    print(data['Stock'][0])
-    print('Minimum Adj_Low:', data['Adj_Low'][data['Stock'] == 'AAPL'].min())
-    print('Maximum Adj_High:', data['Adj_High'][data['Stock'] == 'AAPL'].max())
-
-    # Print the minimum 'Adj_Low' and maximum 'Adj_High' for 'FXAIX'
-    print('FXAIX')
-    print('Minimum Adj_Low:', data['Adj_Low'][data['Stock'] == 'FXAIX'].min())
-    print('Maximum Adj_High:', data['Adj_High'][data['Stock'] == 'FXAIX'].max())
-
-    ohlc_min = data['Low'].min()
-    ohlc_max = data['High'].max()
-    ohlc_delta = ohlc_max - ohlc_min
-
-    # normalize data
-    data['Norm_Adj_Close'] = (data['Adj Close'] - ohlc_min) / ohlc_delta
-    data['Norm_Adj_High'] = (data['Adj_High'] - ohlc_min) / ohlc_delta
-    data['Norm_Adj_Low'] = (data['Adj_Low'] - ohlc_min) / ohlc_delta
-    data['Norm_Adj_Open'] = (data['Adj_Open'] - ohlc_min) / ohlc_delta
-    data['Norm_Adj_Volume'] = (data['Adj_Volume'] - data['Adj_Volume'].min())\
-                            / (data['Adj_Volume'].max() - data['Adj_Volume'].min())
-
     for stock in index_symbols:
         mask = data['Stock'] == stock
 
@@ -106,10 +76,6 @@ def load_index_data(index_symbols, start_date, end_date):
         data.loc[mask, 'Norm_Adj_Volume']  \
             = (data.loc[mask, 'Adj_Volume'] - data.loc[mask, 'Adj_Volume'].min()) \
             / (data.loc[mask, 'Adj_Volume'].max() - data.loc[mask, 'Adj_Volume'].min())
-
-    # drop temp columns
-    data = data.drop(['Min'], axis=1)
-    data = data.drop(['Max'], axis=1)
 
     return data
 

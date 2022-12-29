@@ -155,6 +155,10 @@ def generate(stock_data):
     stock_data = calculate_simple_moving_average(
         stock_data, '10_day_ma', 'Norm_Adj_Close', 10)
     stock_data = calculate_simple_moving_average(
+        stock_data, '12_day_ma', 'Norm_Adj_Close', 12)
+    stock_data = calculate_simple_moving_average(
+        stock_data, '26_day_ma', 'Norm_Adj_Close', 26)
+    stock_data = calculate_simple_moving_average(
         stock_data, '50_day_ma', 'Norm_Adj_Close', 50)
     stock_data = calculate_simple_moving_average(
         stock_data, '200_day_ma', 'Norm_Adj_Close', 200)
@@ -165,6 +169,10 @@ def generate(stock_data):
         stock_data, '5_day_obv_ma', 'obv', 5)
     stock_data = calculate_simple_moving_average(
         stock_data, '10_day_obv_ma', 'obv', 10)
+    stock_data = calculate_simple_moving_average(
+        stock_data, '12_day_obv_ma', 'obv', 12)
+    stock_data = calculate_simple_moving_average(
+        stock_data, '26_day_obv_ma', 'obv', 26)
     stock_data = calculate_simple_moving_average(
         stock_data, '50_day_obv_ma', 'obv', 50)
     stock_data = calculate_simple_moving_average(

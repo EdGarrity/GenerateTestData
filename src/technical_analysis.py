@@ -106,17 +106,32 @@ def calculate_obv(stock_data):
         # Create variable to remember the previous volume
         prev_volume = 0
 
-        #Iterate over the rows of the dataframe
+        # Create variable to remember the previous close
+        prev_close = 0
+
+        # Create variable to remember the previous OBV
+        prev_obv = 0
+
+        # Iterate over the rows of the dataframe
         for i, row in subdata.iterrows():
             # If this is the first row, set the 'obav' value to the 'volume' value
             if i == subdata.index[0]:
-                subdata.at[i, 'obv'] = row['Norm_Adj_Volume']
-                prev_volume = 0
+                delta = 0
 
-            # If this is not the first row, set the 'obv' value to the current 'volume' minus the
-            # previous 'volume'
+            # If this is not the first row, calculate the 'obv' value
+            elif row['Norm_Adj_Close'] > prev_close:
+                delta = row['Norm_Adj_Volume']
+
+            elif row['Norm_Adj_Close'] < prev_close:
+                delta = 0 - row['Norm_Adj_Volume']
+
             else:
-                subdata.at[i, 'obv'] = row['Norm_Adj_Volume'] - prev_volume
+                delta = 0
+
+            subdata.at[i, 'obv'] = prev_obv + delta
+            prev_close = row['Norm_Adj_Close']
+            prev_volume = row['Norm_Adj_Volume']
+            prev_obv = subdata.at[i, 'obv']
 
         combined_df = pd.concat([combined_df, subdata])
 

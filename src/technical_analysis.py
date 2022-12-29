@@ -65,7 +65,7 @@ def sort_data(dataframe):
 
     dataframe.sort_index(inplace=True)
 
-def calculate_simple_moving_average(stock_data, name, period):
+def calculate_simple_moving_average(stock_data, name, ticker_field, period):
     """ Generates the simple moving averages.  Calculates the average of a range of prices by the
         number of periods within that range.
 
@@ -77,7 +77,8 @@ def calculate_simple_moving_average(stock_data, name, period):
     for stock in list_stocks(stock_data):
         mask = stock_data['Stock'] == stock
 
-        stock_data.loc[mask, name] = stock_data.loc[mask, 'Norm_Adj_Close'].rolling(period).mean()
+        stock_data.loc[mask, name] = stock_data.loc[mask,
+                                                    ticker_field].rolling(period).mean()
 
     return stock_data
 
@@ -152,8 +153,14 @@ def generate(stock_data):
 
     sort_data(stock_data)
 
-    stock_data = calculate_simple_moving_average(stock_data, '50_day_ma', 50)
-    stock_data = calculate_simple_moving_average(stock_data, '200_day_ma', 200)
+    stock_data = calculate_simple_moving_average(
+        stock_data, '5_day_ma', 'Norm_Adj_Close', 5)
+    stock_data = calculate_simple_moving_average(
+        stock_data, '10_day_ma', 'Norm_Adj_Close', 10)
+    stock_data = calculate_simple_moving_average(
+        stock_data, '50_day_ma', 'Norm_Adj_Close', 50)
+    stock_data = calculate_simple_moving_average(
+        stock_data, '200_day_ma', 'Norm_Adj_Close', 200)
     stock_data = calculate_obv(stock_data)
 
     return stock_data

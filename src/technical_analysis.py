@@ -62,7 +62,7 @@ def sort_data(dataframe):
 
     dataframe.sort_index(inplace=True)
 
-def calculate_simple_moving_average(stock_data, name, ticker_field, period):
+def calculate_SMA(stock_data, name, ticker_field, period):
     """ Generates the simple moving averages.  Calculates the average of a range of prices by the
         number of periods within that range.
 
@@ -101,9 +101,6 @@ def calculate_obv(stock_data):
         # Filter the dataframe to include only rows where the 'stock' column is the selected stock
         subdata = stock_data[stock_data['Stock'] == stock]
 
-        # Create variable to remember the previous volume
-        prev_volume = 0
-
         # Create variable to remember the previous close
         prev_close = 0
 
@@ -128,13 +125,30 @@ def calculate_obv(stock_data):
 
             subdata.at[i, 'obv'] = prev_obv + delta
             prev_close = row['Norm_Adj_Close']
-            prev_volume = row['Norm_Adj_Volume']
             prev_obv = subdata.at[i, 'obv']
 
         combined_df = pd.concat([combined_df, subdata])
 
     # Return the modified dataframe
     return combined_df
+
+def calculate_EMA(stock_data, name, ticker_field, period):
+    """ Generates the exponential moving averages.
+    """
+
+    for ticker in list_stocks(stock_data):
+        # Create variable to remember the previous close
+        prev_EMA = 0
+        
+        # Set mask to the ticker
+        mask = stock_data['Stock'] == ticker
+
+        multiplier = 2 / (period + 1)
+        current_EMA = stock_data.loc[mask, ticker_field] * multiplier + prev_EMA * (1 - multiplier)
+        stock_data.loc[mask, name] = current_EMA
+        prev_EMA = current_EMA
+
+    return stock_data
 
 def generate(stock_data):
     """
@@ -150,32 +164,42 @@ def generate(stock_data):
 
     sort_data(stock_data)
 
-    stock_data = calculate_simple_moving_average(
-        stock_data, '5_day_ma', 'Norm_Adj_Close', 5)
-    stock_data = calculate_simple_moving_average(
-        stock_data, '10_day_ma', 'Norm_Adj_Close', 10)
-    stock_data = calculate_simple_moving_average(
-        stock_data, '12_day_ma', 'Norm_Adj_Close', 12)
-    stock_data = calculate_simple_moving_average(
-        stock_data, '26_day_ma', 'Norm_Adj_Close', 26)
-    stock_data = calculate_simple_moving_average(
-        stock_data, '50_day_ma', 'Norm_Adj_Close', 50)
-    stock_data = calculate_simple_moving_average(
-        stock_data, '200_day_ma', 'Norm_Adj_Close', 200)
+    stock_data = calculate_SMA(stock_data, '5_day_close_sma', 'Norm_Adj_Close', 5)
+    stock_data = calculate_SMA(stock_data, '8_day_close_sma', 'Norm_Adj_Close', 8)
+    stock_data = calculate_SMA(stock_data, '10_day_close_sma', 'Norm_Adj_Close', 10)
+    stock_data = calculate_SMA(stock_data, '12_day_close_sma', 'Norm_Adj_Close', 12)
+    stock_data = calculate_SMA(stock_data, '20_day_close_sma', 'Norm_Adj_Close', 20)
+    stock_data = calculate_SMA(stock_data, '26_day_close_sma', 'Norm_Adj_Close', 26)
+    stock_data = calculate_SMA(stock_data, '50_day_close_sma', 'Norm_Adj_Close', 50)
+    stock_data = calculate_SMA(stock_data, '200_day_close_sma', 'Norm_Adj_Close', 200)
+
+    stock_data = calculate_EMA(stock_data, '5_day_ema', 'Norm_Adj_Close', 5)
+    stock_data = calculate_EMA(stock_data, '8_day_ema', 'Norm_Adj_Close', 8)
+    stock_data = calculate_EMA(stock_data, '10_day_ema', 'Norm_Adj_Close', 10)
+    stock_data = calculate_EMA(stock_data, '12_day_ema', 'Norm_Adj_Close', 12)
+    stock_data = calculate_EMA(stock_data, '20_day_ema', 'Norm_Adj_Close', 20)
+    stock_data = calculate_EMA(stock_data, '26_day_ema', 'Norm_Adj_Close', 26)
+    stock_data = calculate_EMA(stock_data, '50_day_ema', 'Norm_Adj_Close', 50)
+    stock_data = calculate_EMA(stock_data, '200_day_ema', 'Norm_Adj_Close', 200)
 
     stock_data = calculate_obv(stock_data)
 
-    stock_data = calculate_simple_moving_average(
-        stock_data, '5_day_obv_ma', 'obv', 5)
-    stock_data = calculate_simple_moving_average(
-        stock_data, '10_day_obv_ma', 'obv', 10)
-    stock_data = calculate_simple_moving_average(
-        stock_data, '12_day_obv_ma', 'obv', 12)
-    stock_data = calculate_simple_moving_average(
-        stock_data, '26_day_obv_ma', 'obv', 26)
-    stock_data = calculate_simple_moving_average(
-        stock_data, '50_day_obv_ma', 'obv', 50)
-    stock_data = calculate_simple_moving_average(
-        stock_data, '200_day_obv_ma', 'obv', 200)
+    stock_data = calculate_SMA(stock_data, '5_day_obv_ma', 'obv', 5)
+    stock_data = calculate_SMA(stock_data, '8_day_obv_ma', 'obv', 8)
+    stock_data = calculate_SMA(stock_data, '10_day_obv_ma', 'obv', 10)
+    stock_data = calculate_SMA(stock_data, '12_day_obv_ma', 'obv', 12)
+    stock_data = calculate_SMA(stock_data, '20_day_obv_ma', 'obv', 20)
+    stock_data = calculate_SMA(stock_data, '26_day_obv_ma', 'obv', 26)
+    stock_data = calculate_SMA(stock_data, '50_day_obv_ma', 'obv', 50)
+    stock_data = calculate_SMA(stock_data, '200_day_obv_ma', 'obv', 200)
+
+    stock_data = calculate_EMA(stock_data, '5_day_obv_ema', 'obv', 5)
+    stock_data = calculate_EMA(stock_data, '8_day_obv_ema', 'obv', 8)
+    stock_data = calculate_EMA(stock_data, '10_day_obv_ema', 'obv', 10)
+    stock_data = calculate_EMA(stock_data, '12_day_obv_ema', 'obv', 12)
+    stock_data = calculate_EMA(stock_data, '20_day_obv_ema', 'obv', 20)
+    stock_data = calculate_EMA(stock_data, '26_day_obv_ema', 'obv', 26)
+    stock_data = calculate_EMA(stock_data, '50_day_obv_ema', 'obv', 50)
+    stock_data = calculate_EMA(stock_data, '200_day_obv_ema', 'obv', 200)
 
     return stock_data

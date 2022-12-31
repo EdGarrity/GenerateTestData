@@ -10,7 +10,6 @@ def is_stock_data_empty(data):
     This function takes a pandas dataframe as an input and returns True if the dataframe is None or
     empty, and False otherwise. It does this by using the is operator to check if the dataframe is
     None, and the empty attribute of the dataframe to check if it is empty.
-
     """
 
     # Check if the dataframe is None
@@ -62,7 +61,7 @@ def sort_data(dataframe):
 
     dataframe.sort_index(inplace=True)
 
-def calculate_simple_moving_average(stock_data, name, ticker_field, period):
+def calculate_SMA(stock_data, name, ticker_field, period):
     """ Generates the simple moving averages.  Calculates the average of a range of prices by the
         number of periods within that range.
 
@@ -101,9 +100,6 @@ def calculate_obv(stock_data):
         # Filter the dataframe to include only rows where the 'stock' column is the selected stock
         subdata = stock_data[stock_data['Stock'] == stock]
 
-        # Create variable to remember the previous volume
-        prev_volume = 0
-
         # Create variable to remember the previous close
         prev_close = 0
 
@@ -128,12 +124,39 @@ def calculate_obv(stock_data):
 
             subdata.at[i, 'obv'] = prev_obv + delta
             prev_close = row['Norm_Adj_Close']
-            prev_volume = row['Norm_Adj_Volume']
             prev_obv = subdata.at[i, 'obv']
 
         combined_df = pd.concat([combined_df, subdata])
 
     # Return the modified dataframe
+    return combined_df
+
+def calculate_ema(stock_data, name, ticker_field, period):
+    """ Generates the exponential moving averages.
+    """
+
+    multiplier = 2 / (period + 1)
+
+    # Add a new column called 'obav' filled with zeros
+    stock_data[name] = 0
+
+    # create datafram to hold new stock_data
+    combined_df = pd.DataFrame()
+
+    for ticker in list_stocks(stock_data):
+        # Filter the dataframe to include only rows where the 'stock' column is the selected stock
+        subdata = stock_data[stock_data['Stock'] == ticker]
+
+        # Create variable to remember the previous EMA
+        prev_ema = 0
+        
+        # Iterate over the rows of the dataframe
+        for i, row in subdata.iterrows():
+            current_ema = row[ticker_field] * multiplier + prev_ema * (1 - multiplier)
+            subdata.at[i, name] = current_ema
+            prev_ema = current_ema
+
+        combined_df = pd.concat([combined_df, subdata])
     return combined_df
 
 def generate(stock_data):
@@ -150,32 +173,15 @@ def generate(stock_data):
 
     sort_data(stock_data)
 
-    stock_data = calculate_simple_moving_average(
-        stock_data, '5_day_ma', 'Norm_Adj_Close', 5)
-    stock_data = calculate_simple_moving_average(
-        stock_data, '10_day_ma', 'Norm_Adj_Close', 10)
-    stock_data = calculate_simple_moving_average(
-        stock_data, '12_day_ma', 'Norm_Adj_Close', 12)
-    stock_data = calculate_simple_moving_average(
-        stock_data, '26_day_ma', 'Norm_Adj_Close', 26)
-    stock_data = calculate_simple_moving_average(
-        stock_data, '50_day_ma', 'Norm_Adj_Close', 50)
-    stock_data = calculate_simple_moving_average(
-        stock_data, '200_day_ma', 'Norm_Adj_Close', 200)
-
     stock_data = calculate_obv(stock_data)
 
-    stock_data = calculate_simple_moving_average(
-        stock_data, '5_day_obv_ma', 'obv', 5)
-    stock_data = calculate_simple_moving_average(
-        stock_data, '10_day_obv_ma', 'obv', 10)
-    stock_data = calculate_simple_moving_average(
-        stock_data, '12_day_obv_ma', 'obv', 12)
-    stock_data = calculate_simple_moving_average(
-        stock_data, '26_day_obv_ma', 'obv', 26)
-    stock_data = calculate_simple_moving_average(
-        stock_data, '50_day_obv_ma', 'obv', 50)
-    stock_data = calculate_simple_moving_average(
-        stock_data, '200_day_obv_ma', 'obv', 200)
+    ticker_fields = ['Norm_Adj_Open', 'Norm_Adj_High', 'Norm_Adj_Low', 'Norm_Adj_Close', 'Norm_Adj_Volume', 'obv']
+    periods = [5, 8, 10, 12, 20, 26, 50, 200]
+    
+    for ticker in ticker_fields:
+        for period in periods:
+            attribute_name = str(period) + '_day_' + ticker
+            stock_data = calculate_SMA(stock_data, attribute_name + '_sma', ticker, period)
+            stock_data = calculate_ema(stock_data, attribute_name + '_ema', ticker, period)
 
     return stock_data

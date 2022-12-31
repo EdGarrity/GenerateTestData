@@ -12,7 +12,7 @@ CREATE TABLE [dbo].[TestData](
 	[index] [int] null,
 	[Stock] [varchar](11) NULL,
 	[Date] [datetime] NULL,
-	[Key] [varchar](20) NULL,
+	[Key] [varchar](200) NULL,
 	[Value] [float] NULL
 ) ON [PRIMARY]
 GO

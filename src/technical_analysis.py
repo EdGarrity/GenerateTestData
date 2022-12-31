@@ -61,7 +61,7 @@ def sort_data(dataframe):
 
     dataframe.sort_index(inplace=True)
 
-def calculate_SMA(stock_data, name, ticker_field, period):
+def calculate_sma(stock_data, name, ticker_field, period):
     """ Generates the simple moving averages.  Calculates the average of a range of prices by the
         number of periods within that range.
 
@@ -149,7 +149,7 @@ def calculate_ema(stock_data, name, ticker_field, period):
 
         # Create variable to remember the previous EMA
         prev_ema = 0
-        
+
         # Iterate over the rows of the dataframe
         for i, row in subdata.iterrows():
             current_ema = row[ticker_field] * multiplier + prev_ema * (1 - multiplier)
@@ -175,13 +175,18 @@ def generate(stock_data):
 
     stock_data = calculate_obv(stock_data)
 
-    ticker_fields = ['Norm_Adj_Open', 'Norm_Adj_High', 'Norm_Adj_Low', 'Norm_Adj_Close', 'Norm_Adj_Volume', 'obv']
+    ticker_fields = ['Norm_Adj_Open',
+                     'Norm_Adj_High',
+                     'Norm_Adj_Low',
+                     'Norm_Adj_Close',
+                     'Norm_Adj_Volume',
+                     'obv']
     periods = [5, 8, 10, 12, 20, 26, 50, 200]
-    
+
     for ticker in ticker_fields:
         for period in periods:
             attribute_name = str(period) + '_day_' + ticker
-            stock_data = calculate_SMA(stock_data, attribute_name + '_sma', ticker, period)
+            stock_data = calculate_sma(stock_data, attribute_name + '_sma', ticker, period)
             stock_data = calculate_ema(stock_data, attribute_name + '_ema', ticker, period)
 
     return stock_data

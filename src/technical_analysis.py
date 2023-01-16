@@ -61,7 +61,7 @@ def sort_data(dataframe):
 
     dataframe.sort_index(inplace=True)
 
-def calculate_SMA(stock_data, name, ticker_field, period):
+def calculate_sma(stock_data, name, ticker_field, period):
     """ Generates the simple moving averages.  Calculates the average of a range of prices by the
         number of periods within that range.
 
@@ -149,12 +149,86 @@ def calculate_ema(stock_data, name, ticker_field, period):
 
         # Create variable to remember the previous EMA
         prev_ema = 0
-        
+
         # Iterate over the rows of the dataframe
         for i, row in subdata.iterrows():
             current_ema = row[ticker_field] * multiplier + prev_ema * (1 - multiplier)
             subdata.at[i, name] = current_ema
             prev_ema = current_ema
+
+        combined_df = pd.concat([combined_df, subdata])
+    return combined_df
+
+
+def calculate_tr(stock_data, name, period):
+    """ https: // www.investopedia.com/terms/a/atr.asp """
+    # Add a new column called 'tr' filled with zeros
+    stock_data[name] = 0
+    
+    # create datafram to hold new stock_data
+    combined_df = pd.DataFrame()
+
+    for stock in list_stocks(stock_data):
+        # Filter the dataframe to include only rows where the 'stock' column is the selected stock
+        subdata = stock_data[stock_data['Stock'] == stock]
+
+        # Create variable to remember the previous close
+        prev_close = 0
+
+        # Iterate over the rows of the dataframe
+        for i, row in subdata.iterrows():
+            # If this is the first row, set the True Range to H - L
+            if i == subdata.index[0]:
+                tr = row['Norm_Adj_High'] - row['Norm_Adj_Low']
+
+            # If this is not the first row, calculate TR = MAX( H-L, |H-Cp|, |L-Cp|)
+            else:
+                tr = max(row['Norm_Adj_High'] - row['Norm_Adj_Low'],
+                         abs(row['Norm_Adj_High'] - prev_close), 
+                         abs(row['Norm_Adj_Low'] - prev_close))
+
+            subdata.at[i, name] = tr
+            prev_close = row['Norm_Adj_Close']
+
+        combined_df = pd.concat([combined_df, subdata])
+    return combined_df
+
+
+def calculate_atr(stock_data, tr_name, atr_name, period):
+    """ https: // www.investopedia.com/terms/a/atr.asp """
+    stock_data[atr_name] = 0
+
+    # create datafram to hold new stock_data
+    combined_df = pd.DataFrame()
+
+    for stock in list_stocks(stock_data):
+        # Filter the dataframe to include only rows where the 'stock' column is the selected stock
+        subdata = stock_data[stock_data['Stock'] == stock]
+
+        # Create variable to remember the previous ATR
+        prev_atr = 0
+
+        # Iterate over the rows of the dataframe
+        for i, row in subdata.iterrows():
+            # If this is row 1 to N-1, set the Average True Range to 0
+            if i == subdata.index[0]:
+                atr = row[tr_name]
+
+            elif i in subdata.index[1:period - 1]:
+                atr += row[tr_name]
+
+            # if this is row N, calculate ATR using the first N TR values.
+            elif i == subdata.index[period]:
+                atr += row[tr_name]
+                atr /= period
+                subdata.at[i, atr_name] = atr
+
+            # If there is a previous ATR calculated
+            else:
+                atr = (prev_atr + row[tr_name]) / period
+                subdata.at[i, atr_name] = atr
+
+            prev_atr = atr
 
         combined_df = pd.concat([combined_df, subdata])
     return combined_df
@@ -175,13 +249,23 @@ def generate(stock_data):
 
     stock_data = calculate_obv(stock_data)
 
-    ticker_fields = ['Norm_Adj_Open', 'Norm_Adj_High', 'Norm_Adj_Low', 'Norm_Adj_Close', 'Norm_Adj_Volume', 'obv']
+    ticker_fields = ['Norm_Adj_Open',
+                     'Norm_Adj_High',
+                     'Norm_Adj_Low',
+                     'Norm_Adj_Close',
+                     'Norm_Adj_Volume',
+                     'obv']
     periods = [5, 8, 10, 12, 20, 26, 50, 200]
-    
+
     for ticker in ticker_fields:
         for period in periods:
             attribute_name = str(period) + '_day_' + ticker
-            stock_data = calculate_SMA(stock_data, attribute_name + '_sma', ticker, period)
+            stock_data = calculate_sma(stock_data, attribute_name + '_sma', ticker, period)
             stock_data = calculate_ema(stock_data, attribute_name + '_ema', ticker, period)
+    
+    period=14
+    attribute_name = str(period) + '_day_'
+    stock_data = calculate_tr(stock_data, attribute_name + 'tr', period)
+    stock_data = calculate_atr(stock_data, attribute_name + 'tr',  attribute_name + 'atr', period)
 
     return stock_data

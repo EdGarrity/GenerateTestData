@@ -212,13 +212,14 @@ def calculate_atr(stock_data, tr_name, atr_name, period):
         for i, row in subdata.iterrows():
             # If this is row 1 to N-1, set the Average True Range to 0
             if i == subdata.index[0]:
-                atr = row['Norm_Adj_High']
+                atr = row[tr_name]
 
-            elif i in subdata.index[1:period]:
-                atr += row['Norm_Adj_High']
+            elif i in subdata.index[1:period - 1]:
+                atr += row[tr_name]
 
             # if this is row N, calculate ATR using the first N TR values.
             elif i == subdata.index[period]:
+                atr += row[tr_name]
                 atr /= period
                 
             # If there is a previous ATR calculated

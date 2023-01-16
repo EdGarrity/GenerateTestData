@@ -221,12 +221,13 @@ def calculate_atr(stock_data, tr_name, atr_name, period):
             elif i == subdata.index[period]:
                 atr += row[tr_name]
                 atr /= period
-                
+                subdata.at[i, atr_name] = atr
+
             # If there is a previous ATR calculated
             else:
                 atr = (prev_atr + row[tr_name]) / period
+                subdata.at[i, atr_name] = atr
 
-            subdata.at[i, atr_name] = atr
             prev_atr = atr
 
         combined_df = pd.concat([combined_df, subdata])

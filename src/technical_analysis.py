@@ -184,7 +184,7 @@ def calculate_tr(stock_data, name, period):
             # If this is not the first row, calculate TR = MAX( H-L, |H-Cp|, |L-Cp|)
             else:
                 tr = max(row['Norm_Adj_High'] - row['Norm_Adj_Low'],
-                         abs(row['Norm_Adj_High'] - prev_close), 
+                         abs(row['Norm_Adj_High'] - prev_close),
                          abs(row['Norm_Adj_Low'] - prev_close))
 
             subdata.at[i, name] = tr
@@ -229,6 +229,45 @@ def calculate_atr(stock_data, tr_name, atr_name, period):
                 subdata.at[i, atr_name] = atr
 
             prev_atr = atr
+
+        combined_df = pd.concat([combined_df, subdata])
+    return combined_df
+
+def calculate_dmx(stock_data, name_prefix, period):
+    """ https://www.investopedia.com/terms/w/wilders-dmi-adx.asp """
+    # Add a new column called 'dmp' filled with zeros
+    dmp_attribute_name = name_prefix + '_dmp'
+    dmm_attribute_name = name_prefix + '_dmm'
+    stock_data[dmp_attribute_name] = 0
+    stock_data[dmm_attribute_name] = 0
+    
+    # create datafram to hold new stock_data
+    combined_df = pd.DataFrame()
+
+    for stock in list_stocks(stock_data):
+        # Filter the dataframe to include only rows where the 'stock' column is the selected stock
+        subdata = stock_data[stock_data['Stock'] == stock]
+
+        # Create variable to remember the previous high
+        prev_high = 0
+        prev_low = 0
+
+        # Iterate over the rows of the dataframe
+        for i, row in subdata.iterrows():
+            # If this is the first row
+            if i == subdata.index[0]:
+                dmp = row['Norm_Adj_High']
+                dmm = row['Norm_Adj_Low']
+
+            # If this is not the first row
+            else:
+                dmp = row['Norm_Adj_High'] - prev_high
+                dmm = prev_low - row['Norm_Adj_Low']
+
+            subdata.dmp[i, dmp_attribute_name] = dmp
+            subdata.dmm[i, dmm_attribute_name] = dmm
+            prev_high = row['Norm_Adj_High']
+            prev_low = row['Norm_Adj_Low']
 
         combined_df = pd.concat([combined_df, subdata])
     return combined_df

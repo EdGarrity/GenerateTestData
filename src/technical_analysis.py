@@ -3,6 +3,7 @@
  periods in that range.
 """
 
+import numpy as np
 import pandas as pd
 
 def is_stock_data_empty(data):
@@ -160,38 +161,29 @@ def calculate_ema(stock_data, name, ticker_field, period):
     return combined_df
 
 
-def calculate_tr(stock_data, name, period):
+def calculate_tr(stock_data, tr_attribute_name):
     """ https: // www.investopedia.com/terms/a/atr.asp """
+
     # Add a new column called 'tr' filled with zeros
-    stock_data[name] = 0
-    
-    # create datafram to hold new stock_data
-    combined_df = pd.DataFrame()
+    stock_data[tr_attribute_name] = 0
 
     for stock in list_stocks(stock_data):
-        # Filter the dataframe to include only rows where the 'stock' column is the selected stock
-        subdata = stock_data[stock_data['Stock'] == stock]
+        high = stock_data.loc[stock_data['Stock'] == stock, 'Norm_Adj_Low']
+        low = stock_data.loc[stock_data['Stock'] == stock, 'Norm_Adj_Low']
+        close = stock_data.loc[stock_data['Stock'] == stock, 'Norm_Adj_Close']
+        tr = stock_data.loc[stock_data['Stock'] == stock, tr_attribute_name]
 
-        # Create variable to remember the previous close
-        prev_close = 0
+        n = high.shape[0]
+        tr[0] = high[0] - low[0]
 
-        # Iterate over the rows of the dataframe
-        for i, row in subdata.iterrows():
-            # If this is the first row, set the True Range to H - L
-            if i == subdata.index[0]:
-                tr = row['Norm_Adj_High'] - row['Norm_Adj_Low']
+        for i in range(1, n):
+            tr[i] = max(high[i] - low[i],
+                        abs(high[i] - close[i - 1]),
+                        abs(low[i] - close[i - 1]))
 
-            # If this is not the first row, calculate TR = MAX( H-L, |H-Cp|, |L-Cp|)
-            else:
-                tr = max(row['Norm_Adj_High'] - row['Norm_Adj_Low'],
-                         abs(row['Norm_Adj_High'] - prev_close), 
-                         abs(row['Norm_Adj_Low'] - prev_close))
+        stock_data.loc[stock_data['Stock'] == stock, tr_attribute_name] = tr
 
-            subdata.at[i, name] = tr
-            prev_close = row['Norm_Adj_Close']
-
-        combined_df = pd.concat([combined_df, subdata])
-    return combined_df
+    return stock_data
 
 
 def calculate_atr(stock_data, tr_name, atr_name, period):
@@ -233,6 +225,52 @@ def calculate_atr(stock_data, tr_name, atr_name, period):
         combined_df = pd.concat([combined_df, subdata])
     return combined_df
 
+
+def calculate_adx(stock_data, tr_attribute_name, adx_name, period):
+    """ https://www.investopedia.com/terms/w/wilders-dmi-adx.asp """
+
+    # Add a new column called 'adx' filled with zeros
+    stock_data[adx_name] = 0
+
+    for stock in list_stocks(stock_data):
+        high = stock_data.loc[stock_data['Stock'] == stock, 'Norm_Adj_Low']
+        low = stock_data.loc[stock_data['Stock'] == stock, 'Norm_Adj_Low']
+        tr = stock_data.loc[stock_data['Stock'] == stock, tr_attribute_name]
+
+        n = high.shape[0]
+
+        dm_plus = np.zeros(n)
+        dm_minus = np.zeros(n)
+        for i in range(1, n):
+            dm_plus[i] = max(0, high[i] - high[i - 1]) \
+                if high[i] - high[i - 1] > low[i - 1] - low[i] else 0
+            dm_minus[i] = max(0, low[i - 1] - low[i]) \
+                if high[i] - high[i - 1] < low[i - 1] - low[i] else 0
+
+        dm_plus_sum = np.zeros(n)
+        dm_minus_sum = np.zeros(n)
+        for i in range(1, n):
+            dm_plus_sum[i] = dm_plus_sum[i - 1] + dm_plus[i]
+            dm_minus_sum[i] = dm_minus_sum[i - 1] + dm_minus[i]
+
+        tr_sum = np.zeros(n)
+        for i in range(1, n):
+            tr_sum[i] = tr_sum[i - 1] + tr[i]
+
+        dx = np.zeros(n)
+        for i in range(1, n):
+            dx[i] = 100 * (dm_plus_sum[i] / tr_sum[i] - dm_minus_sum[i] / tr_sum[i]) / \
+                (dm_plus_sum[i] / tr_sum[i] + dm_minus_sum[i] / tr_sum[i])
+
+        adx = np.zeros(n)
+        for i in range(1, n):
+            adx[i] = (adx[i - 1] * (period - 1) + dx[i]) / period
+
+        stock_data.loc[stock_data['Stock'] == stock, adx_name] = adx
+
+    return stock_data
+
+
 def generate(stock_data):
     """
     Generate the technical analysis data needed to evaluate the stock information and identify
@@ -263,9 +301,11 @@ def generate(stock_data):
             stock_data = calculate_sma(stock_data, attribute_name + '_sma', ticker, period)
             stock_data = calculate_ema(stock_data, attribute_name + '_ema', ticker, period)
     
-    period=14
+    stock_data = calculate_tr(stock_data, 'tr')
+
+    period = 14
     attribute_name = str(period) + '_day_'
-    stock_data = calculate_tr(stock_data, attribute_name + 'tr', period)
-    stock_data = calculate_atr(stock_data, attribute_name + 'tr',  attribute_name + 'atr', period)
+    stock_data = calculate_atr(stock_data, 'tr',  attribute_name + 'atr', period)
+    stock_data = calculate_adx(stock_data, 'tr',  attribute_name + 'adx', period)
 
     return stock_data

@@ -168,7 +168,7 @@ def calculate_tr(stock_data, tr_attribute_name):
     stock_data[tr_attribute_name] = 0
 
     for stock in list_stocks(stock_data):
-        high = stock_data.loc[stock_data['Stock'] == stock, 'Norm_Adj_Low']
+        high = stock_data.loc[stock_data['Stock'] == stock, 'Norm_Adj_High']
         low = stock_data.loc[stock_data['Stock'] == stock, 'Norm_Adj_Low']
         close = stock_data.loc[stock_data['Stock'] == stock, 'Norm_Adj_Close']
         tr = stock_data.loc[stock_data['Stock'] == stock, tr_attribute_name]
@@ -233,11 +233,11 @@ def calculate_adx(stock_data, tr_attribute_name, adx_name, period):
     stock_data[adx_name] = 0
 
     for stock in list_stocks(stock_data):
-        high = stock_data.loc[stock_data['Stock'] == stock, 'Norm_Adj_Low']
+        high = stock_data.loc[stock_data['Stock'] == stock, 'Norm_Adj_High']
         low = stock_data.loc[stock_data['Stock'] == stock, 'Norm_Adj_Low']
         tr = stock_data.loc[stock_data['Stock'] == stock, tr_attribute_name]
 
-        n = high.shape[0]
+        n = stock_data.loc[stock_data['Stock'] == stock].shape[0]
 
         dm_plus = np.zeros(n)
         dm_minus = np.zeros(n)
@@ -259,14 +259,53 @@ def calculate_adx(stock_data, tr_attribute_name, adx_name, period):
 
         dx = np.zeros(n)
         for i in range(1, n):
-            dx[i] = 100 * (dm_plus_sum[i] / tr_sum[i] - dm_minus_sum[i] / tr_sum[i]) / \
-                (dm_plus_sum[i] / tr_sum[i] + dm_minus_sum[i] / tr_sum[i])
+            n1 = dm_plus_sum[i] / tr_sum[i]
+            n2 = dm_minus_sum[i] / tr_sum[i]
+            # print(i, n1, n2, dm_plus_sum[i],  dm_minus_sum[i], tr_sum[i])
+            
+            if (n1 + n2 == 0):
+                dx[1] = 0
+            else:
+                dx[i] = 100 * (n1 - n2) / (n1 + n2)
 
         adx = np.zeros(n)
         for i in range(1, n):
             adx[i] = (adx[i - 1] * (period - 1) + dx[i]) / period
 
         stock_data.loc[stock_data['Stock'] == stock, adx_name] = adx
+
+    return stock_data
+
+
+def calculate_bollinger_bands(stock_data, bb_name, window_size=20, num_std_dev=2):
+    """ https://www.investopedia.com/terms/b/bollingerbands.asp """
+
+    # Add a new column called 'bb' filled with zeros
+    # stock_data[bb_name] = 0
+
+    for stock in list_stocks(stock_data):
+        mask = stock_data['Stock'] == stock
+
+        # Calculate the Typical Price
+        tp = (stock_data.loc[mask, 'Norm_Adj_High'] +
+              stock_data.loc[mask, 'Norm_Adj_Low'] +
+              stock_data.loc[mask, 'Norm_Adj_Close']) / 3
+            
+        # Calculate the rolling mean and standard deviation
+        rolling_mean = tp.rolling(window=window_size).mean()
+        rolling_std = tp.rolling(window=window_size).std()
+
+        # Calculate the upper and lower bands
+        upper_band = rolling_mean + (num_std_dev * rolling_std)
+        lower_band = rolling_mean - (num_std_dev * rolling_std)
+
+        bb_upper = bb_name + '_upper'
+        bb_lower = bb_name + '_lower'
+        bb_ma = bb_name + '_ma'
+        
+        stock_data.loc[mask, bb_upper] = upper_band
+        stock_data.loc[mask, bb_lower] = lower_band
+        stock_data.loc[mask, bb_ma] = rolling_mean
 
     return stock_data
 
@@ -284,7 +323,7 @@ def generate(stock_data):
     """
 
     sort_data(stock_data)
-
+    
     stock_data = calculate_obv(stock_data)
 
     ticker_fields = ['Norm_Adj_Open',
@@ -300,7 +339,8 @@ def generate(stock_data):
             attribute_name = str(period) + '_day_' + ticker
             stock_data = calculate_sma(stock_data, attribute_name + '_sma', ticker, period)
             stock_data = calculate_ema(stock_data, attribute_name + '_ema', ticker, period)
-    
+            stock_data = calculate_bollinger_bands(stock_data, attribute_name + '_boiler_band', window_size=period)
+
     stock_data = calculate_tr(stock_data, 'tr')
 
     period = 14

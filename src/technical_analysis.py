@@ -277,11 +277,8 @@ def calculate_adx(stock_data, tr_attribute_name, adx_name, period):
     return stock_data
 
 
-def calculate_bollinger_bands(stock_data, bb_name, window_size=20, num_std_dev=2):
+def calculate_bb(stock_data, bb_name, window_size=20, num_std_dev=2):
     """ https://www.investopedia.com/terms/b/bollingerbands.asp """
-
-    # Add a new column called 'bb' filled with zeros
-    # stock_data[bb_name] = 0
 
     for stock in list_stocks(stock_data):
         mask = stock_data['Stock'] == stock
@@ -309,6 +306,40 @@ def calculate_bollinger_bands(stock_data, bb_name, window_size=20, num_std_dev=2
 
     return stock_data
 
+
+def calculate_rsi(stock_data, name, window_size=14):
+    """ https://en.wikipedia.org/wiki/Relative_strength_index """
+    
+    for stock in list_stocks(stock_data):
+        mask = stock_data['Stock'] == stock
+
+        # Calculate the Relative Strength Index (RSI)
+        prices = stock_data.loc[mask, 'Norm_Adj_Close']
+        deltas = np.diff(prices)
+        seed = deltas[:window_size+1]
+        up = seed[seed >= 0].sum()/window_size
+        down = -seed[seed < 0].sum()/window_size
+        rs = up/down
+        rsi = np.zeros_like(prices)
+        rsi[:window_size] = 100. - 100./(1.+rs)
+
+        for i in range(window_size, len(prices)):
+            delta = deltas[i-1]  # cause the diff is 1 shorter
+            if delta > 0:
+                upval = delta
+                downval = 0.
+            else:
+                upval = 0.
+                downval = -delta
+
+            up = (up*(window_size-1) + upval)/window_size
+            down = (down*(window_size-1) + downval)/window_size
+            rs = up/down
+            rsi[i] = 100. - 100./(1.+rs)
+
+        stock_data.loc[mask, name]=rsi
+
+    return stock_data
 
 def generate(stock_data):
     """
@@ -339,7 +370,7 @@ def generate(stock_data):
             attribute_name = str(period) + '_day_' + ticker
             stock_data = calculate_sma(stock_data, attribute_name + '_sma', ticker, period)
             stock_data = calculate_ema(stock_data, attribute_name + '_ema', ticker, period)
-            stock_data = calculate_bollinger_bands(stock_data, attribute_name + '_boiler_band', window_size=period)
+            stock_data = calculate_bb(stock_data, attribute_name + '_boiler_band', window_size=period)
 
     stock_data = calculate_tr(stock_data, 'tr')
 
@@ -347,5 +378,6 @@ def generate(stock_data):
     attribute_name = str(period) + '_day_'
     stock_data = calculate_atr(stock_data, 'tr',  attribute_name + 'atr', period)
     stock_data = calculate_adx(stock_data, 'tr',  attribute_name + 'adx', period)
+    stock_data = calculate_rsi(stock_data, attribute_name + 'rsi', period)
 
     return stock_data

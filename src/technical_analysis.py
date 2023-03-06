@@ -309,7 +309,7 @@ def calculate_bb(stock_data, bb_name, window_size=20, num_std_dev=2):
 
 def calculate_rsi(stock_data, name, window_size=14):
     """ https://en.wikipedia.org/wiki/Relative_strength_index """
-    
+   
     for stock in list_stocks(stock_data):
         mask = stock_data['Stock'] == stock
 
@@ -340,6 +340,41 @@ def calculate_rsi(stock_data, name, window_size=14):
         stock_data.loc[mask, name]=rsi
 
     return stock_data
+
+
+def calculate_macd(stock_data, signal_period=9):
+    """
+    The Moving Average Convergence Divergence (MACD) is a technical indicator 
+    that shows the relationship between two moving averages of a security’s 
+    price. It can help traders time their entries and exits with market 
+    momentum.
+
+    To calculate the MACD in Python, you need to import numpy and pandas 
+    libraries and use their methods to compute the exponential moving averages 
+    (EMA) of the price data. Then you subtract the 26-period EMA from the 
+    12-period EMA to get the MACD line. You can also calculate a 9-period EMA 
+    of the MACD line to get the signal line, which can be used to generate buy 
+    and sell signals.
+    
+    Args:
+        stock_data (pd.DataFrame): A pandas DataFrame with columns "date" and "close".
+        signal_period (int, optional): Number of periods used for signal line (default=9).
+
+    Returns:
+        pd.DataFrame: data with additional columns "macd" and "signal".
+    """
+
+    for stock in list_stocks(stock_data):
+        mask = stock_data['Stock'] == stock
+
+        # Calculate MACD line
+        stock_data.loc[mask, 'MACD'] = stock_data.loc[mask, '12_day_Norm_Adj_Close_ema'] - stock_data.loc[mask, '26_day_Norm_Adj_Close_ema']
+
+        # Calculate signal line
+        stock_data.loc[mask, 'Signal'] = stock_data.loc[mask, 'MACD'].ewm(span=signal_period, adjust=False).mean()
+
+    return stock_data
+
 
 def generate(stock_data):
     """
@@ -379,5 +414,6 @@ def generate(stock_data):
     stock_data = calculate_atr(stock_data, 'tr',  attribute_name + 'atr', period)
     stock_data = calculate_adx(stock_data, 'tr',  attribute_name + 'adx', period)
     stock_data = calculate_rsi(stock_data, attribute_name + 'rsi', period)
+    stock_data = calculate_macd(stock_data)
 
     return stock_data

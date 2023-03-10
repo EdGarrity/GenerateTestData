@@ -376,6 +376,58 @@ def calculate_macd(stock_data, signal_period=9):
     return stock_data
 
 
+def stochastic_oscillator(stock_data, attribute_prefix, n=14, d=3):
+    """
+    The Stochastic Oscillator is a popular technical indicator used to identify
+    overbought or oversold conditions in a financial instrument. It is
+    calculated using the following formula:
+
+    %K = 100 * (C - L5) / (H5 - L5)
+
+    Where:
+	    • C = the most recent closing price
+	    • L5 = the lowest price of the last 5 periods
+	    • H5 = the highest price of the last 5 periods
+
+    stochastic_oscillator() takes in a dataframe containing the price data for 
+    a financial instrument (Open, High, Low, Close), and a parameter n which 
+    is the number of periods to use for the calculation. It then calculates the 
+    lowest low and highest high for each period using the rolling() function 
+    from pandas, and then applies the Stochastic Oscillator formula to compute 
+    the %K value for each period.
+
+    The resulting %K values are then added as a new column to the input dataframe.
+
+    Args:
+        stock_data (pd.DataFrame): A pandas DataFrame with columns "date" and "close".
+        n (int, optional): Number of periods used for signal line (default=9).  Defaults to 5.
+
+    Returns:
+        pd.DataFrame: data with additional column %K
+    """
+
+    attribute_k_name = attribute_prefix + '%K'
+    attribute_d_name = attribute_prefix + '%D'
+
+    for stock in list_stocks(stock_data):
+        mask = stock_data['Stock'] == stock
+
+        # Calculate Stochastic Oscillator for a given dataframe
+        lowest_low = stock_data.loc[mask,'Norm_Adj_Low'].rolling(window=n).min()
+        highest_high = stock_data.loc[mask,'Norm_Adj_High'].rolling(window=n).max()
+
+        k_percent = 100 * \
+            (stock_data.loc[mask, 'Norm_Adj_Close'] -
+             lowest_low) / (highest_high - lowest_low)
+
+        d_percent = k_percent.rolling(window=d).mean()
+        
+        stock_data.loc[mask, attribute_k_name] = k_percent
+        stock_data.loc[mask, attribute_d_name] = d_percent
+
+    return stock_data
+
+
 def generate(stock_data):
     """
     Generate the technical analysis data needed to evaluate the stock information and identify
@@ -398,15 +450,19 @@ def generate(stock_data):
                      'Norm_Adj_Close',
                      'Norm_Adj_Volume',
                      'obv']
-    periods = [5, 8, 10, 12, 20, 26, 50, 200]
+    periods = [5, 8, 10, 12, 14, 20, 26, 50, 200]
 
-    for ticker in ticker_fields:
+    for field in ticker_fields:
         for period in periods:
-            attribute_name = str(period) + '_day_' + ticker
-            stock_data = calculate_sma(stock_data, attribute_name + '_sma', ticker, period)
-            stock_data = calculate_ema(stock_data, attribute_name + '_ema', ticker, period)
+            attribute_name = str(period) + '_day_' + field
+            stock_data = calculate_sma(stock_data, attribute_name + '_sma', field, period)
+            stock_data = calculate_ema(stock_data, attribute_name + '_ema', field, period)
             stock_data = calculate_bb(stock_data, attribute_name + '_boiler_band', window_size=period)
 
+    for period in periods:
+        attribute_name = str(period) + '_day_'
+        stock_data = stochastic_oscillator(stock_data, attribute_name, period)
+    
     stock_data = calculate_tr(stock_data, 'tr')
 
     period = 14

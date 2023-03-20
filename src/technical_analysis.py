@@ -428,6 +428,34 @@ def stochastic_oscillator(stock_data, attribute_prefix, n=14, d=3):
     return stock_data
 
 
+def calculate_rps(stock_data, benchmark_ticker='FXAIX'):
+    """ Compares the performance of a stock to its benchmark index over time
+
+    Args:
+        stock_data (_type_): A pandas DataFrame with columns "date" and "close".
+        reference_ticker (str, optional): Benchmark ticker symbol. Defaults to 'FXAIX'.
+
+    Returns:
+        pd.DataFrame: data with additional RPS column
+    """
+
+    attribute_name = benchmark_ticker + '_rps'
+
+    stock_data[attribute_name] = 0
+    
+    for ticker in list_stocks(stock_data):
+        # if (ticker != benchmark_ticker):
+        ticker_mask = stock_data['Stock'] == ticker
+        benchmark_ticker_mask = stock_data['Stock'] == benchmark_ticker
+        
+        stock_data.loc[ticker_mask, attribute_name] = stock_data.loc[ticker_mask, 'Norm_Adj_Close'] / \
+            stock_data.loc[benchmark_ticker_mask, 'Norm_Adj_Close']
+    
+    stock_data.replace([np.inf, -np.inf], np.nan, inplace=True)
+    stock_data.fillna(method='ffill', inplace=True)
+
+    return stock_data
+    
 def generate(stock_data):
     """
     Generate the technical analysis data needed to evaluate the stock information and identify
@@ -471,5 +499,6 @@ def generate(stock_data):
     stock_data = calculate_adx(stock_data, 'tr',  attribute_name + 'adx', period)
     stock_data = calculate_rsi(stock_data, attribute_name + 'rsi', period)
     stock_data = calculate_macd(stock_data)
+    stock_data = calculate_rps(stock_data, 'FXAIX')
 
     return stock_data

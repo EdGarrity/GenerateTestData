@@ -439,68 +439,21 @@ def calculate_rps(stock_data, benchmark_ticker='FXAIX'):
         pd.DataFrame: data with additional RPS column
     """
 
-    # df = stock_data
-    # df_aapl = df[df['Stock'] == 'AAPL']
-    # df_fxaix = df[df['Stock'] == 'FXAIX']
-    # df = pd.merge(df_aapl, df_fxaix, on='Date', suffixes=('_AAPL', '_FXAIX'))
-    # df['RPS'] = df['Norm_Adj_Close_AAPL'] / df['Norm_Adj_Close_FXAIX']
+    attribute_name = benchmark_ticker + '_rps'
 
-
-
+    stock_data[attribute_name] = 0
+    
     for ticker in list_stocks(stock_data):
         # if (ticker != benchmark_ticker):
         ticker_mask = stock_data['Stock'] == ticker
         benchmark_ticker_mask = stock_data['Stock'] == benchmark_ticker
         
-        attribute_name = benchmark_ticker + '_rps'
-
-        stock_data.loc[ticker_mask, attribute_name] = 0
+        stock_data.loc[ticker_mask, attribute_name] = stock_data.loc[ticker_mask, 'Norm_Adj_Close'] / \
+            stock_data.loc[benchmark_ticker_mask, 'Norm_Adj_Close']
     
-            # merged_table = []
-            # for row1 in stock_data.loc[ticker_mask]:
-            #     for row2 in stock_data.loc[benchmark_ticker_mask]:
-            #         if row1['Date'] == row2['Date']:
-            #             merged_table.append([row1['Date'], row1['Norm_Adj_Close'], row2['Norm_Adj_Close']])
+    stock_data.replace([np.inf, -np.inf], np.nan, inplace=True)
+    stock_data.fillna(method='ffill', inplace=True)
 
-
-            # table_1 = stock_data.loc[ticker_mask, 'Date']
-            # print(table_1)
-            
-            # merged_table = pd.merge(stock_data[ticker_mask], stock_data[benchmark_ticker_mask], on='Date')
-            # test_table = merged_table[:, 'Norm_Adj_Close_x'] / merged_table[:, 'Norm_Adj_Close_y']
-            # print(test_table)
-
-
-        test_1 = pd.DataFrame()
-        test_1= stock_data.loc[ticker_mask]
-
-        test_table = pd.DataFrame()
-
-        test_table['Date'] = test_1.loc[:,'Date']
-        test_table['Stock'] = ticker
-        test_table['RPS'] = stock_data.loc[ticker_mask, 'Norm_Adj_Close'] / stock_data.loc[benchmark_ticker_mask, 'Norm_Adj_Close']
-        
-        test_table.to_csv('sample.csv', index=False)
-        
-        # stock_data.loc[ticker_mask, attribute_name] = test_table
-
-
-    # stock_data.loc[ticker_mask, attribute_name] = 0
-
-    # print (df)
-
-    # Calculate the relative price strength
-    # relative_price_strength = stock_data.div(stock_data[stock_data['Stock'] == benchmark_ticker], axis=0)
-    # print (relative_price_strength)
-    
-    # Store the relative price strength in a new column
-    # attribute_name = benchmark_ticker + '_rps'
-    # stock_data[attribute_name] = relative_price_strength.mean(axis=1)
-    
-    # df = stock_data
-    # df['Relative Price Strength'] = df['FXAIX']['Norm_Adj_Close'] / df['Norm_Adj_Close']
-    # print (df)
-    
     return stock_data
     
 def generate(stock_data):

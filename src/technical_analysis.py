@@ -62,6 +62,48 @@ def sort_data(dataframe):
 
     dataframe.sort_index(inplace=True)
 
+def calculate_aggregate(stock_data, period):
+    """
+    Calculates the following:
+        MA
+        Min
+        Max
+        Bias
+        DeltaMA
+        DeltaBias
+        TV
+        HighestHigh
+        HighestLow
+        LowestHigh
+        LowestLow
+
+    Args:
+        stock_data (pd.DataFrame): A pandas DataFrame with columns "date" and "close".
+        period: The date range to aggregate
+
+    Returns:
+        pd.DataFrame: data with additional collumns for each aggregate
+    """
+
+    attribute_name = str(period) + '_day_'
+
+    for stock in list_stocks(stock_data):
+        mask = stock_data['Stock'] == stock
+
+        stock_data.loc[mask, attribute_name + 'MA'] = stock_data.loc[mask,'Norm_Adj_Close'].rolling(window=period).mean()
+        stock_data.loc[mask, attribute_name + 'Min'] = stock_data.loc[mask,'Norm_Adj_Close'].rolling(window=period).min()
+        stock_data.loc[mask, attribute_name + 'Max'] = stock_data.loc[mask,'Norm_Adj_Close'].rolling(window=period).max()
+        stock_data.loc[mask, attribute_name + 'HighestHigh'] = stock_data.loc[mask,'Norm_Adj_High'].rolling(window=period).max()
+        stock_data.loc[mask, attribute_name + 'HighestLow'] = stock_data.loc[mask,'Norm_Adj_High'].rolling(window=period).min()
+        stock_data.loc[mask, attribute_name + 'LowestHigh'] = stock_data.loc[mask,'Norm_Adj_Low'].rolling(window=period).max()
+        stock_data.loc[mask, attribute_name + 'LowestLow'] = stock_data.loc[mask,'Norm_Adj_Low'].rolling(window=period).min()
+        stock_data.loc[mask, attribute_name + 'Bias'] = stock_data.loc[mask,'Norm_Adj_Close'] - stock_data.loc[mask, attribute_name + 'MA']
+        stock_data.loc[mask, attribute_name + 'TV'] = stock_data.loc[mask,'Norm_Adj_Volume'].rolling(window=period).mean()
+        stock_data.loc[mask, attribute_name + 'DeltaMA'] = stock_data.loc[mask, attribute_name + 'MA'] - stock_data.loc[mask, attribute_name + 'MA'].shift(1)
+        stock_data.loc[mask, attribute_name + 'DeltaBios'] = stock_data.loc[mask, attribute_name + 'Bias'] - stock_data.loc[mask, attribute_name + 'Bias'].shift(1)
+
+    return stock_data
+
 def calculate_sma(stock_data, name, ticker_field, period):
     """ Generates the simple moving averages.  Calculates the average of a range of prices by the
         number of periods within that range.
@@ -478,10 +520,13 @@ def generate(stock_data):
                      'Norm_Adj_Close',
                      'Norm_Adj_Volume',
                      'obv']
-    periods = [5, 8, 10, 12, 14, 20, 26, 50, 200]
-
-    for field in ticker_fields:
-        for period in periods:
+    # periods = [5, 8, 10, 12, 14, 20, 26, 50, 200]
+    periods = list(range(3, 31)) + [60, 90, 180, 300]
+    
+    for period in periods:
+        stock_data = calculate_aggregate(stock_data, period)
+        
+        for field in ticker_fields:
             attribute_name = str(period) + '_day_' + field
             stock_data = calculate_sma(stock_data, attribute_name + '_sma', field, period)
             stock_data = calculate_ema(stock_data, attribute_name + '_ema', field, period)

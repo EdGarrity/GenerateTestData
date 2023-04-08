@@ -520,8 +520,9 @@ def generate(stock_data):
                      'Norm_Adj_Close',
                      'Norm_Adj_Volume',
                      'obv']
-    periods = [5, 8, 10, 12, 14, 20, 26, 50, 200]
-
+    # periods = [5, 8, 10, 12, 14, 20, 26, 50, 200]
+    periods = list(range(3, 31)) + [60, 90, 180, 300]
+    
     for period in periods:
         stock_data = calculate_aggregate(stock_data, period)
         

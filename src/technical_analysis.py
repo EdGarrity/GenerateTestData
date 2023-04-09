@@ -497,7 +497,40 @@ def calculate_rps(stock_data, benchmark_ticker='FXAIX'):
     stock_data.fillna(method='ffill', inplace=True)
 
     return stock_data
+
+def calculate_stoch_rsi (stock_data, period=14, k=3, d=3):
+    """
+    Calculates the Stochastic RSI (StochRSI)
+
+    It calculates the Stochastic RSI by normalizing the RSI values over the 
+    specified period and multiplying by 100. Then, it calculates a simple 
+    moving average of the Stochastic RSI over the specified smoothing period.
     
+    Args:
+        stock_data (_type_): A pandas DataFrame with columns "date" and "close".
+        period (int, optional): The period for the RSI. Defaults to 14.
+        k (int, optional): The period for the Stochastic RSI. Defaults to 3.
+        d (int, optional): The period for the Stochastic RSI smoothing. Defaults to 3.
+
+    Returns:
+        _type_: _description_
+    """
+    rsi_attribute_name = str(period) + '_day_rsi'
+    stoch_rsi_attribute_name = str(period) + '_day_stoch_rsi'
+
+    for ticker in list_stocks(stock_data):
+        ticker_mask = stock_data['Stock'] == ticker
+        
+        stoch_rsi = ((stock_data.loc[ticker_mask, rsi_attribute_name] 
+                      - stock_data.loc[ticker_mask, rsi_attribute_name].rolling(k).min()) 
+                     / (stock_data.loc[ticker_mask, rsi_attribute_name].rolling(k).max() 
+                        - stock_data.loc[ticker_mask, rsi_attribute_name].rolling(k).min())
+                     ) * 100
+        stoch_rsi_d = stoch_rsi.rolling(d).mean()
+        stock_data.loc[ticker_mask, stoch_rsi_attribute_name] = stoch_rsi_d
+    
+    return stock_data
+        
 def generate(stock_data):
     """
     Generate the technical analysis data needed to evaluate the stock information and identify

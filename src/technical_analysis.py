@@ -584,6 +584,8 @@ def calculate_adx(stock_data, period=14):
     Returns:
         pandas.Series: A new series containing the ADX values for each row in the input DataFrame.
     """
+    adx_attribute_name = str(period) + '_day_adx'
+
     for ticker in list_stocks(stock_data):
         ticker_mask = stock_data['Stock'] == ticker
 
@@ -596,16 +598,16 @@ def calculate_adx(stock_data, period=14):
 
         # calculate the True Range (TR)
         dataframe['TR'] = np.nan
-        dataframe['TR'] = np.maximum(dataframe['high'] - dataframe['low'],
-                          np.maximum(abs(dataframe['high'] - dataframe['close'].shift()),
-                                     abs(dataframe['low'] - dataframe['close'].shift())))
+        dataframe['TR'] = np.maximum(high - low,
+                          np.maximum(abs(high - close.shift()),
+                                     abs(low - close.shift())))
 
         # calculate the Directional Movement (+DM and -DM)
-        dataframe['+DM'] = np.where((dataframe['high'] - dataframe['high'].shift()) > (dataframe['low'].shift() - dataframe['low']),
-                                    np.maximum(dataframe['high'] - dataframe['high'].shift(), 0), 0)
+        dataframe['+DM'] = np.where((high - high.shift()) > (low.shift() - low),
+                                    np.maximum(high - high.shift(), 0), 0)
 
-        dataframe['-DM'] = np.where((dataframe['low'].shift() - dataframe['low']) > (dataframe['high'] - dataframe['high'].shift()),
-                                    np.maximum(dataframe['low'].shift() - dataframe['low'], 0), 0)
+        dataframe['-DM'] = np.where((low.shift() - low) > (high - high.shift()),
+                                    np.maximum(low.shift() - low, 0), 0)
 
         # calculate the Directional Indicator (+DI and -DI)
         dataframe['+DI'] = 100 * (dataframe['+DM'].rolling(window=period).sum() /
@@ -620,9 +622,10 @@ def calculate_adx(stock_data, period=14):
 
         dataframe['ADX'] = dataframe['DX'].rolling(window=period).mean()
 
-    # return the ADX values as a new series
-    return dataframe['ADX']
+        stock_data.loc[ticker_mask, adx_attribute_name] = dataframe['ADX']
 
+    # return the ADX values
+    return stock_data
 
 def generate(stock_data):
     """
@@ -665,52 +668,11 @@ def generate(stock_data):
         stock_data = stochastic_oscillator(stock_data, attribute_name, period)
         stock_data = calculate_stoch_rsi(stock_data, period)
         stock_data = calculate_atr(stock_data, period)
+        stock_data = calculate_adx(stock_data, period)
 
     # period = 14
     # attribute_name = str(period) + '_day_'
-    # stock_data = calculate_adx(stock_data, 'tr',  attribute_name + 'adx', period)
-    # stock_data = calculate_macd(stock_data)
-    # stock_data = calculate_rps(stock_data, 'FXAIX')
+    stock_data = calculate_macd(stock_data)
+    stock_data = calculate_rps(stock_data, 'FXAIX')
 
     return stock_data
-
-
-# def calculate_adx(dataframe, period=14):
-#     """
-#     Calculates the Average Directional Index (ADX) using Pandas.
-
-#     Args:
-#         dataframe (pandas.DataFrame): The input DataFrame with columns for high, low, and close prices.
-#         period (int): The number of periods to use for calculating the ADX. Default is 14.
-
-#     Returns:
-#         pandas.Series: A new series containing the ADX values for each row in the input DataFrame.
-#     """
-#     # calculate the True Range (TR)
-#     dataframe['TR'] = np.nan
-#     dataframe['TR'] = np.maximum(dataframe['high'] - dataframe['low'],
-#                                  np.maximum(abs(dataframe['high'] - dataframe['close'].shift()),
-#                                             abs(dataframe['low'] - dataframe['close'].shift())))
-
-#     # calculate the Directional Movement (+DM and -DM)
-#     dataframe['+DM'] = np.where((dataframe['high'] - dataframe['high'].shift()) > (dataframe['low'].shift() - dataframe['low']),
-#                                 np.maximum(dataframe['high'] - dataframe['high'].shift(), 0), 0)
-
-#     dataframe['-DM'] = np.where((dataframe['low'].shift() - dataframe['low']) > (dataframe['high'] - dataframe['high'].shift()),
-#                                 np.maximum(dataframe['low'].shift() - dataframe['low'], 0), 0)
-
-#     # calculate the Directional Indicator (+DI and -DI)
-#     dataframe['+DI'] = 100 * (dataframe['+DM'].rolling(window=period).sum() /
-#                               dataframe['TR'].rolling(window=period).sum())
-
-#     dataframe['-DI'] = 100 * (dataframe['-DM'].rolling(window=period).sum() /
-#                               dataframe['TR'].rolling(window=period).sum())
-
-#     # calculate the Average Directional Index (ADX)
-#     dataframe['DX'] = 100 * (abs(dataframe['+DI'] - dataframe['-DI']
-#                                  ) / (dataframe['+DI'] + dataframe['-DI']))
-
-#     dataframe['ADX'] = dataframe['DX'].rolling(window=period).mean()
-
-#     # return the ADX values as a new series
-#     return dataframe['ADX']

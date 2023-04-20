@@ -268,55 +268,55 @@ def calculate_ema(stock_data, name, ticker_field, period):
 #     return combined_df
 
 
-def calculate_adx(stock_data, tr_attribute_name, adx_name, period):
-    """ https://www.investopedia.com/terms/w/wilders-dmi-adx.asp """
+# def calculate_adx(stock_data, tr_attribute_name, adx_name, period):
+#     """ https://www.investopedia.com/terms/w/wilders-dmi-adx.asp """
 
-    # Add a new column called 'adx' filled with zeros
-    stock_data[adx_name] = 0
+#     # Add a new column called 'adx' filled with zeros
+#     stock_data[adx_name] = 0
 
-    for stock in list_stocks(stock_data):
-        high = stock_data.loc[stock_data['Stock'] == stock, 'Norm_Adj_High']
-        low = stock_data.loc[stock_data['Stock'] == stock, 'Norm_Adj_Low']
-        tr = stock_data.loc[stock_data['Stock'] == stock, tr_attribute_name]
+#     for stock in list_stocks(stock_data):
+#         high = stock_data.loc[stock_data['Stock'] == stock, 'Norm_Adj_High']
+#         low = stock_data.loc[stock_data['Stock'] == stock, 'Norm_Adj_Low']
+#         tr = stock_data.loc[stock_data['Stock'] == stock, tr_attribute_name]
 
-        n = stock_data.loc[stock_data['Stock'] == stock].shape[0]
+#         n = stock_data.loc[stock_data['Stock'] == stock].shape[0]
 
-        dm_plus = np.zeros(n)
-        dm_minus = np.zeros(n)
-        for i in range(1, n):
-            dm_plus[i] = max(0, high[i] - high[i - 1]) \
-                if high[i] - high[i - 1] > low[i - 1] - low[i] else 0
-            dm_minus[i] = max(0, low[i - 1] - low[i]) \
-                if high[i] - high[i - 1] < low[i - 1] - low[i] else 0
+#         dm_plus = np.zeros(n)
+#         dm_minus = np.zeros(n)
+#         for i in range(1, n):
+#             dm_plus[i] = max(0, high[i] - high[i - 1]) \
+#                 if high[i] - high[i - 1] > low[i - 1] - low[i] else 0
+#             dm_minus[i] = max(0, low[i - 1] - low[i]) \
+#                 if high[i] - high[i - 1] < low[i - 1] - low[i] else 0
 
-        dm_plus_sum = np.zeros(n)
-        dm_minus_sum = np.zeros(n)
-        for i in range(1, n):
-            dm_plus_sum[i] = dm_plus_sum[i - 1] + dm_plus[i]
-            dm_minus_sum[i] = dm_minus_sum[i - 1] + dm_minus[i]
+#         dm_plus_sum = np.zeros(n)
+#         dm_minus_sum = np.zeros(n)
+#         for i in range(1, n):
+#             dm_plus_sum[i] = dm_plus_sum[i - 1] + dm_plus[i]
+#             dm_minus_sum[i] = dm_minus_sum[i - 1] + dm_minus[i]
 
-        tr_sum = np.zeros(n)
-        for i in range(1, n):
-            tr_sum[i] = tr_sum[i - 1] + tr[i]
+#         tr_sum = np.zeros(n)
+#         for i in range(1, n):
+#             tr_sum[i] = tr_sum[i - 1] + tr[i]
 
-        dx = np.zeros(n)
-        for i in range(1, n):
-            n1 = dm_plus_sum[i] / tr_sum[i]
-            n2 = dm_minus_sum[i] / tr_sum[i]
-            # print(i, n1, n2, dm_plus_sum[i],  dm_minus_sum[i], tr_sum[i])
+#         dx = np.zeros(n)
+#         for i in range(1, n):
+#             n1 = dm_plus_sum[i] / tr_sum[i]
+#             n2 = dm_minus_sum[i] / tr_sum[i]
+#             # print(i, n1, n2, dm_plus_sum[i],  dm_minus_sum[i], tr_sum[i])
             
-            if (n1 + n2 == 0):
-                dx[1] = 0
-            else:
-                dx[i] = 100 * (n1 - n2) / (n1 + n2)
+#             if (n1 + n2 == 0):
+#                 dx[1] = 0
+#             else:
+#                 dx[i] = 100 * (n1 - n2) / (n1 + n2)
 
-        adx = np.zeros(n)
-        for i in range(1, n):
-            adx[i] = (adx[i - 1] * (period - 1) + dx[i]) / period
+#         adx = np.zeros(n)
+#         for i in range(1, n):
+#             adx[i] = (adx[i - 1] * (period - 1) + dx[i]) / period
 
-        stock_data.loc[stock_data['Stock'] == stock, adx_name] = adx
+#         stock_data.loc[stock_data['Stock'] == stock, adx_name] = adx
 
-    return stock_data
+#     return stock_data
 
 
 def calculate_bb(stock_data, bb_name, window_size=20, num_std_dev=2):
@@ -571,6 +571,58 @@ def calculate_atr(stock_data, period=14):
         stock_data.loc[ticker_mask, atr_attribute_name] = atr
 
     return stock_data
+
+
+def calculate_adx(stock_data, period=14):
+    """
+    Calculates the Average Directional Index (ADX) using Pandas.
+
+    Args:
+        stock_data (pandas.DataFrame): The input DataFrame with columns for high, low, and close prices.
+        period (int): The number of periods to use for calculating the ADX. Default is 14.
+
+    Returns:
+        pandas.Series: A new series containing the ADX values for each row in the input DataFrame.
+    """
+    for ticker in list_stocks(stock_data):
+        ticker_mask = stock_data['Stock'] == ticker
+
+        high = stock_data.loc[ticker_mask, 'Norm_Adj_High']
+        low = stock_data.loc[ticker_mask, 'Norm_Adj_Low']
+        close = stock_data.loc[ticker_mask, 'Norm_Adj_Close']
+
+        # create datafram to hold new stock_data
+        dataframe = pd.DataFrame()
+
+        # calculate the True Range (TR)
+        dataframe['TR'] = np.nan
+        dataframe['TR'] = np.maximum(dataframe['high'] - dataframe['low'],
+                          np.maximum(abs(dataframe['high'] - dataframe['close'].shift()),
+                                     abs(dataframe['low'] - dataframe['close'].shift())))
+
+        # calculate the Directional Movement (+DM and -DM)
+        dataframe['+DM'] = np.where((dataframe['high'] - dataframe['high'].shift()) > (dataframe['low'].shift() - dataframe['low']),
+                                    np.maximum(dataframe['high'] - dataframe['high'].shift(), 0), 0)
+
+        dataframe['-DM'] = np.where((dataframe['low'].shift() - dataframe['low']) > (dataframe['high'] - dataframe['high'].shift()),
+                                    np.maximum(dataframe['low'].shift() - dataframe['low'], 0), 0)
+
+        # calculate the Directional Indicator (+DI and -DI)
+        dataframe['+DI'] = 100 * (dataframe['+DM'].rolling(window=period).sum() /
+                                dataframe['TR'].rolling(window=period).sum())
+
+        dataframe['-DI'] = 100 * (dataframe['-DM'].rolling(window=period).sum() /
+                                dataframe['TR'].rolling(window=period).sum())
+
+        # calculate the Average Directional Index (ADX)
+        dataframe['DX'] = 100 * (abs(dataframe['+DI'] - dataframe['-DI']
+                                    ) / (dataframe['+DI'] + dataframe['-DI']))
+
+        dataframe['ADX'] = dataframe['DX'].rolling(window=period).mean()
+
+    # return the ADX values as a new series
+    return dataframe['ADX']
+
 
 def generate(stock_data):
     """

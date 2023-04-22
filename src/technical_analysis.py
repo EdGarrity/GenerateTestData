@@ -627,6 +627,37 @@ def calculate_adx(stock_data, period=14):
     # return the ADX values
     return stock_data
 
+def calculate_adl(stock_data):
+    """
+    The Accumulation/Distribution Indicator is a volume-based technical 
+    indicator which uses the relationship between the stock’s price and volume 
+    flow to determine the underlying trend of a stock, up, down, or sideways 
+    trend of a stock
+    
+    Args:
+        stock_data (pandas.DataFrame): The input DataFrame with columns for high, low, and close prices.
+
+    Returns:
+        pandas.Series: A new series containing the ADX values for each row in the input DataFrame.
+    """
+    adl_attribute_name = 'adl'
+
+    for ticker in list_stocks(stock_data):
+        ticker_mask = stock_data['Stock'] == ticker
+
+        high = stock_data.loc[ticker_mask, 'Norm_Adj_High']
+        low = stock_data.loc[ticker_mask, 'Norm_Adj_Low']
+        close = stock_data.loc[ticker_mask, 'Norm_Adj_Close']
+        volume = stock_data.loc[ticker_mask, 'Norm_Adj_Volume']
+
+        money_flow_multiplier = ((close - low) - (high - close)) / (high - low)
+        money_flow_volume = money_flow_multiplier * volume
+        adl = money_flow_volume.cumsum()
+
+        stock_data.loc[ticker_mask, adl_attribute_name] = adl
+
+    return stock_data
+
 def generate(stock_data):
     """
     Generate the technical analysis data needed to evaluate the stock information and identify
@@ -642,6 +673,7 @@ def generate(stock_data):
     sort_data(stock_data)
     
     stock_data = calculate_obv(stock_data)
+    stock_data = calculate_adl(stock_data)
 
     ticker_fields = ['Norm_Adj_Open',
                      'Norm_Adj_High',
@@ -649,7 +681,6 @@ def generate(stock_data):
                      'Norm_Adj_Close',
                      'Norm_Adj_Volume',
                      'obv']
-    # periods = [5, 8, 10, 12, 14, 20, 26, 50, 200]
     periods = list(range(3, 31)) + [60, 90, 180, 300]
     
     for period in periods:
@@ -670,8 +701,6 @@ def generate(stock_data):
         stock_data = calculate_atr(stock_data, period)
         stock_data = calculate_adx(stock_data, period)
 
-    # period = 14
-    # attribute_name = str(period) + '_day_'
     stock_data = calculate_macd(stock_data)
     stock_data = calculate_rps(stock_data, 'FXAIX')
 

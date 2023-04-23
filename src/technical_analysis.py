@@ -5,6 +5,7 @@
 
 import numpy as np
 import pandas as pd
+from tti.indicators import AccumulationDistributionLine
 
 def is_stock_data_empty(data):
     """
@@ -627,36 +628,36 @@ def calculate_adx(stock_data, period=14):
     # return the ADX values
     return stock_data
 
-def calculate_adl(stock_data):
-    """
-    The Accumulation/Distribution Indicator is a volume-based technical 
-    indicator which uses the relationship between the stock’s price and volume 
-    flow to determine the underlying trend of a stock, up, down, or sideways 
-    trend of a stock
+# def calculate_adl(stock_data):
+#     """
+#     The Accumulation/Distribution Indicator is a volume-based technical 
+#     indicator which uses the relationship between the stock’s price and volume 
+#     flow to determine the underlying trend of a stock, up, down, or sideways 
+#     trend of a stock
     
-    Args:
-        stock_data (pandas.DataFrame): The input DataFrame with columns for high, low, and close prices.
+#     Args:
+#         stock_data (pandas.DataFrame): The input DataFrame with columns for high, low, and close prices.
 
-    Returns:
-        pandas.Series: A new series containing the ADX values for each row in the input DataFrame.
-    """
-    adl_attribute_name = 'adl'
+#     Returns:
+#         pandas.Series: A new series containing the ADX values for each row in the input DataFrame.
+#     """
+#     adl_attribute_name = 'adl'
 
-    for ticker in list_stocks(stock_data):
-        ticker_mask = stock_data['Stock'] == ticker
+#     for ticker in list_stocks(stock_data):
+#         ticker_mask = stock_data['Stock'] == ticker
 
-        high = stock_data.loc[ticker_mask, 'Norm_Adj_High']
-        low = stock_data.loc[ticker_mask, 'Norm_Adj_Low']
-        close = stock_data.loc[ticker_mask, 'Norm_Adj_Close']
-        volume = stock_data.loc[ticker_mask, 'Norm_Adj_Volume']
+#         high = stock_data.loc[ticker_mask, 'Norm_Adj_High']
+#         low = stock_data.loc[ticker_mask, 'Norm_Adj_Low']
+#         close = stock_data.loc[ticker_mask, 'Norm_Adj_Close']
+#         volume = stock_data.loc[ticker_mask, 'Norm_Adj_Volume']
 
-        money_flow_multiplier = ((close - low) - (high - close)) / (high - low)
-        money_flow_volume = money_flow_multiplier * volume
-        adl = money_flow_volume.cumsum()
+#         money_flow_multiplier = ((close - low) - (high - close)) / (high - low)
+#         money_flow_volume = money_flow_multiplier * volume
+#         adl = money_flow_volume.cumsum()
 
-        stock_data.loc[ticker_mask, adl_attribute_name] = adl
+#         stock_data.loc[ticker_mask, adl_attribute_name] = adl
 
-    return stock_data
+#     return stock_data
 
 def generate(stock_data):
     """
@@ -673,7 +674,20 @@ def generate(stock_data):
     sort_data(stock_data)
     
     stock_data = calculate_obv(stock_data)
-    stock_data = calculate_adl(stock_data)
+    # stock_data = calculate_adl(stock_data)
+
+    # Use the AccumulationDistributionLine function in the Trading Technical Indicators (tti) library
+    normalized_stock_data = pd.DataFrame()
+    normalized_stock_data["Open"] = stock_data["Norm_Adj_Open"]
+    normalized_stock_data["High"] = stock_data["Norm_Adj_High"]
+    normalized_stock_data["Low"] = stock_data["Norm_Adj_Low"]
+    normalized_stock_data["Close"] = stock_data["Norm_Adj_Close"]
+    normalized_stock_data["Volume"] = stock_data["Norm_Adj_Volume"]
+
+    # Calculate Accumulation/Distribution Indicator
+    adl = AccumulationDistributionLine(normalized_stock_data)
+
+    print(adl)
 
     ticker_fields = ['Norm_Adj_Open',
                      'Norm_Adj_High',

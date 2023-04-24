@@ -641,7 +641,7 @@ def calculate_adl(stock_data):
     Returns:
         pandas.Series: A new series containing the ADX values for each row in the input DataFrame.
     """
-    print("calculate_adl_ti(stock_data):")
+    print("calculate_adl(stock_data):")
     
     adl_attribute_name = 'adl_value'
     adl_signal_attribute_name = 'adl_signal'
@@ -667,8 +667,8 @@ def calculate_adl(stock_data):
                 short_exposure_factor=1.5)
         
         # Generate signal code
-        simulation_data['signal_code'] = simulation_data['signal'].map({'buy': 1, 'sell': -1, 'hold': 0})
-
+        simulation_data['signal_code'] = simulation_data['signal'].map({'buy': -1, 'sell': 1, 'hold': 0})
+       
         stock_data.loc[ticker_mask, adl_attribute_name] = ticker_adl.getTiData()['adl']
         stock_data.loc[ticker_mask, adl_signal_attribute_name] = simulation_data['signal_code']
 
@@ -691,33 +691,33 @@ def generate(stock_data):
     stock_data = calculate_obv(stock_data)
     stock_data = calculate_adl(stock_data)
 
-    ticker_fields = ['Norm_Adj_Open',
-                     'Norm_Adj_High',
-                     'Norm_Adj_Low',
-                     'Norm_Adj_Close',
-                     'Norm_Adj_Volume',
-                     'obv']
-    periods = list(range(3, 31)) + [60, 90, 180, 300]
+    # ticker_fields = ['Norm_Adj_Open',
+    #                  'Norm_Adj_High',
+    #                  'Norm_Adj_Low',
+    #                  'Norm_Adj_Close',
+    #                  'Norm_Adj_Volume',
+    #                  'obv']
+    # periods = list(range(3, 31)) + [60, 90, 180, 300]
     
-    for period in periods:
-        stock_data = calculate_aggregate(stock_data, period)
+    # for period in periods:
+    #     stock_data = calculate_aggregate(stock_data, period)
         
-        for field in ticker_fields:
-            attribute_name = str(period) + '_day_' + field
-            stock_data = calculate_sma(stock_data, attribute_name + '_sma', field, period)
-            stock_data = calculate_ema(stock_data, attribute_name + '_ema', field, period)
-            stock_data = calculate_bb(stock_data, attribute_name + '_boiler_band', window_size=period)
+    #     for field in ticker_fields:
+    #         attribute_name = str(period) + '_day_' + field
+    #         stock_data = calculate_sma(stock_data, attribute_name + '_sma', field, period)
+    #         stock_data = calculate_ema(stock_data, attribute_name + '_ema', field, period)
+    #         stock_data = calculate_bb(stock_data, attribute_name + '_boiler_band', window_size=period)
 
-    for period in range(3, 31):
-        stock_data = stock_data.copy()
-        attribute_name = str(period) + '_day_'
-        stock_data = calculate_rsi(stock_data, attribute_name + 'rsi', period)
-        stock_data = stochastic_oscillator(stock_data, attribute_name, period)
-        stock_data = calculate_stoch_rsi(stock_data, period)
-        stock_data = calculate_atr(stock_data, period)
-        stock_data = calculate_adx(stock_data, period)
+    # for period in range(3, 31):
+    #     stock_data = stock_data.copy()
+    #     attribute_name = str(period) + '_day_'
+    #     stock_data = calculate_rsi(stock_data, attribute_name + 'rsi', period)
+    #     stock_data = stochastic_oscillator(stock_data, attribute_name, period)
+    #     stock_data = calculate_stoch_rsi(stock_data, period)
+    #     stock_data = calculate_atr(stock_data, period)
+    #     stock_data = calculate_adx(stock_data, period)
 
-    stock_data = calculate_macd(stock_data)
-    stock_data = calculate_rps(stock_data, 'FXAIX')
+    # stock_data = calculate_macd(stock_data)
+    # stock_data = calculate_rps(stock_data, 'FXAIX')
 
     return stock_data

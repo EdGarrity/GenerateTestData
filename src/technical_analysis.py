@@ -641,93 +641,38 @@ def calculate_adl(stock_data):
     Returns:
         pandas.Series: A new series containing the ADX values for each row in the input DataFrame.
     """
-    print("calculate_adl(stock_data):")
-    adl_attribute_name = 'adl'
-
-    for ticker in list_stocks(stock_data):
-        ticker_mask = stock_data['Stock'] == ticker
-
-        print("ticker=", ticker)
-
-        high = stock_data.loc[ticker_mask, 'Norm_Adj_High']
-        low = stock_data.loc[ticker_mask, 'Norm_Adj_Low']
-        close = stock_data.loc[ticker_mask, 'Norm_Adj_Close']
-        volume = stock_data.loc[ticker_mask, 'Norm_Adj_Volume']
-
-        money_flow_multiplier = ((close - low) - (high - close)) / (high - low)
-        money_flow_volume = money_flow_multiplier * volume
-        adl = money_flow_volume.cumsum()
-
-        print("ADL:")
-        print(adl)
-        
-        stock_data.loc[ticker_mask, adl_attribute_name] = adl
-
-    return stock_data
-
-
-
-
-def calculate_adl_ti(stock_data):
-    """
-    The Accumulation/Distribution Indicator is a volume-based technical 
-    indicator which uses the relationship between the stock’s price and volume 
-    flow to determine the underlying trend of a stock, up, down, or sideways 
-    trend of a stock
-    
-    Args:
-        stock_data (pandas.DataFrame): The input DataFrame with columns for high, low, and close prices.
-
-    Returns:
-        pandas.Series: A new series containing the ADX values for each row in the input DataFrame.
-    """
     print("calculate_adl_ti(stock_data):")
     
-    adl_attribute_name = 'adl_ti'
+    adl_attribute_name = 'adl_value'
+    adl_signal_attribute_name = 'adl_signal'
 
     for ticker in list_stocks(stock_data):
         ticker_mask = stock_data['Stock'] == ticker
 
         # Use the AccumulationDistributionLine function in the Trading Technical Indicators (tti) library
-        print("ticker=", ticker)
-        
-        normalized_stock_data = pd.DataFrame()
-        # normalized_stock_data["Open"] = stock_data.loc[ticker_mask, "Norm_Adj_Open"]
-        # normalized_stock_data["High"] = stock_data.loc[ticker_mask, "Norm_Adj_High"]
-        # normalized_stock_data["Low"] = stock_data.loc[ticker_mask, "Norm_Adj_Low"]
-        # normalized_stock_data["Close"] = stock_data.loc[ticker_mask, "Norm_Adj_Close"]
-        # normalized_stock_data["Volume"] = stock_data.loc[ticker_mask, "Norm_Adj_Volume"]
-
-        # normalized_stock_data = stock_data.loc[ticker_mask]
-
-        normalized_stock_data["Open"] = stock_data.loc[ticker_mask, "Adj_Open"]
-        normalized_stock_data["High"] = stock_data.loc[ticker_mask, "Adj_High"]
-        normalized_stock_data["Low"] = stock_data.loc[ticker_mask, "Adj_Low"]
-        normalized_stock_data["Close"] = stock_data.loc[ticker_mask, "Adj Close"]
-        normalized_stock_data["Volume"] = stock_data.loc[ticker_mask, "Adj_Volume"]
-
-        print("normalized_stock_data:")
-        print(normalized_stock_data.head(10))
+        adjusted_stock_data = pd.DataFrame()
+        adjusted_stock_data["Open"] = stock_data.loc[ticker_mask, "Adj_Open"]
+        adjusted_stock_data["High"] = stock_data.loc[ticker_mask, "Adj_High"]
+        adjusted_stock_data["Low"] = stock_data.loc[ticker_mask, "Adj_Low"]
+        adjusted_stock_data["Close"] = stock_data.loc[ticker_mask, "Adj Close"]
+        adjusted_stock_data["Volume"] = stock_data.loc[ticker_mask, "Adj_Volume"]
 
         # Calculate Accumulation/Distribution Indicator
-        adl = AccumulationDistributionLine(normalized_stock_data)
-
-        stock_data.loc[ticker_mask, adl_attribute_name] = adl.getTiData()
-
-        print("adl:")
-        print(adl.getTiData())
-
-        # Execute simulation based on trading signals
+        ticker_adl = AccumulationDistributionLine(input_data=adjusted_stock_data)
+        
+        # Generate trading signal
         simulation_data, simulation_statistics, simulation_graph = \
-            adl.getTiSimulation(
-                close_values=normalized_stock_data[['close']], max_exposure=None,
+            ticker_adl.getTiSimulation(
+                close_values=adjusted_stock_data[['close']], max_exposure=None,
                 short_exposure_factor=1.5)
-        print('\nSimulation Data:\n', simulation_data)
+        
+        # Generate signal code
+        simulation_data['signal_code'] = simulation_data['signal'].map({'buy': 1, 'sell': -1, 'hold': 0})
+
+        stock_data.loc[ticker_mask, adl_attribute_name] = ticker_adl.getTiData()['adl']
+        stock_data.loc[ticker_mask, adl_signal_attribute_name] = simulation_data['signal_code']
 
     return stock_data
-
-
-
 
 def generate(stock_data):
     """
@@ -743,19 +688,8 @@ def generate(stock_data):
 
     sort_data(stock_data)
     
-    print("stock_date:")
-    print(stock_data.head(10))
-
-
-
-
-
-
-
     stock_data = calculate_obv(stock_data)
     stock_data = calculate_adl(stock_data)
-    stock_data = calculate_adl_ti(stock_data)
-
 
     ticker_fields = ['Norm_Adj_Open',
                      'Norm_Adj_High',

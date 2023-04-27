@@ -6,6 +6,7 @@
 import numpy as np
 import pandas as pd
 from tti.indicators import AccumulationDistributionLine
+from tti.indicators import ChaikinMoneyFlow
 
 def is_stock_data_empty(data):
     """
@@ -665,12 +666,61 @@ def calculate_adl(stock_data):
             ticker_adl.getTiSimulation(
                 close_values=adjusted_stock_data[['close']], max_exposure=None,
                 short_exposure_factor=1.5)
-        
+        simulation_graph.close()
+
         # Generate signal code
         simulation_data['signal_code'] = simulation_data['signal'].map({'buy': -1, 'sell': 1, 'hold': 0})
        
         stock_data.loc[ticker_mask, adl_attribute_name] = ticker_adl.getTiData()['adl']
         stock_data.loc[ticker_mask, adl_signal_attribute_name] = simulation_data['signal_code']
+
+    return stock_data
+
+
+def calculate_cmf(stock_data, period=5):
+    """
+    Chaikin Money Flow measures the amount of Money Flow Volume over a specific period.
+    
+    Args:
+        stock_data (pandas.DataFrame): The input DataFrame with columns for high, low, and close prices.
+        period (int): The number of periods to use for calculating the CMF. Default is 5.
+
+    Returns:
+        pandas.Series: A new series containing the CMF values for each row in the input DataFrame.
+    """
+    print("calculate_cmf(", period, ")):")
+
+    cmf_attribute_name = 'cmf_value'
+    cmf_signal_attribute_name = 'cmf_signal'
+
+    for ticker in list_stocks(stock_data):
+        ticker_mask = stock_data['Stock'] == ticker
+
+        # Use the ChaikinMoneyFlow function in the Trading Technical Indicators (tti) library
+        adjusted_stock_data = pd.DataFrame()
+        adjusted_stock_data["Open"] = stock_data.loc[ticker_mask, "Adj_Open"]
+        adjusted_stock_data["High"] = stock_data.loc[ticker_mask, "Adj_High"]
+        adjusted_stock_data["Low"] = stock_data.loc[ticker_mask, "Adj_Low"]
+        adjusted_stock_data["Close"] = stock_data.loc[ticker_mask, "Adj Close"]
+        adjusted_stock_data["Volume"] = stock_data.loc[ticker_mask, "Adj_Volume"]
+
+        # Calculate ChaikinMoneyFlow
+        ticker_cmf = ChaikinMoneyFlow(
+            input_data=adjusted_stock_data, period=period)
+
+        # Generate trading signal
+        simulation_data, simulation_statistics, simulation_graph = \
+            ticker_cmf.getTiSimulation(
+                close_values=adjusted_stock_data[['close']], max_exposure=None,
+                short_exposure_factor=1.5)
+        simulation_graph.close()
+        
+        # Generate signal code
+        simulation_data['signal_code'] = simulation_data['signal'].map(
+            {'buy': -1, 'sell': 1, 'hold': 0})
+
+        stock_data.loc[ticker_mask, cmf_attribute_name] = ticker_cmf.getTiData()['cmf']
+        stock_data.loc[ticker_mask, cmf_signal_attribute_name] = simulation_data['signal_code']
 
     return stock_data
 
@@ -691,33 +741,34 @@ def generate(stock_data):
     stock_data = calculate_obv(stock_data)
     stock_data = calculate_adl(stock_data)
 
-    # ticker_fields = ['Norm_Adj_Open',
-    #                  'Norm_Adj_High',
-    #                  'Norm_Adj_Low',
-    #                  'Norm_Adj_Close',
-    #                  'Norm_Adj_Volume',
-    #                  'obv']
-    # periods = list(range(3, 31)) + [60, 90, 180, 300]
+    ticker_fields = ['Norm_Adj_Open',
+                     'Norm_Adj_High',
+                     'Norm_Adj_Low',
+                     'Norm_Adj_Close',
+                     'Norm_Adj_Volume',
+                     'obv']
+    periods = list(range(3, 31)) + [60, 90, 180, 300]
     
-    # for period in periods:
-    #     stock_data = calculate_aggregate(stock_data, period)
+    for period in periods:
+        stock_data = calculate_aggregate(stock_data, period)
         
-    #     for field in ticker_fields:
-    #         attribute_name = str(period) + '_day_' + field
-    #         stock_data = calculate_sma(stock_data, attribute_name + '_sma', field, period)
-    #         stock_data = calculate_ema(stock_data, attribute_name + '_ema', field, period)
-    #         stock_data = calculate_bb(stock_data, attribute_name + '_boiler_band', window_size=period)
+        for field in ticker_fields:
+            attribute_name = str(period) + '_day_' + field
+            stock_data = calculate_sma(stock_data, attribute_name + '_sma', field, period)
+            stock_data = calculate_ema(stock_data, attribute_name + '_ema', field, period)
+            stock_data = calculate_bb(stock_data, attribute_name + '_boiler_band', window_size=period)
 
-    # for period in range(3, 31):
-    #     stock_data = stock_data.copy()
-    #     attribute_name = str(period) + '_day_'
-    #     stock_data = calculate_rsi(stock_data, attribute_name + 'rsi', period)
-    #     stock_data = stochastic_oscillator(stock_data, attribute_name, period)
-    #     stock_data = calculate_stoch_rsi(stock_data, period)
-    #     stock_data = calculate_atr(stock_data, period)
-    #     stock_data = calculate_adx(stock_data, period)
+    for period in range(3, 31):
+        stock_data = stock_data.copy()
+        attribute_name = str(period) + '_day_'
+        stock_data = calculate_rsi(stock_data, attribute_name + 'rsi', period)
+        stock_data = stochastic_oscillator(stock_data, attribute_name, period)
+        stock_data = calculate_stoch_rsi(stock_data, period)
+        stock_data = calculate_atr(stock_data, period)
+        stock_data = calculate_adx(stock_data, period)
+        stock_data = calculate_cmf(stock_data, period)
 
-    # stock_data = calculate_macd(stock_data)
-    # stock_data = calculate_rps(stock_data, 'FXAIX')
+    stock_data = calculate_macd(stock_data)
+    stock_data = calculate_rps(stock_data, 'FXAIX')
 
     return stock_data

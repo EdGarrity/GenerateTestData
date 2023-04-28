@@ -666,6 +666,7 @@ def calculate_adl(stock_data):
             ticker_adl.getTiSimulation(
                 close_values=adjusted_stock_data[['close']], max_exposure=None,
                 short_exposure_factor=1.5)
+        simulation_statistics.clear()
         simulation_graph.close()
 
         # Generate signal code
@@ -712,6 +713,7 @@ def calculate_cmf(stock_data, period=5):
             ticker_cmf.getTiSimulation(
                 close_values=adjusted_stock_data[['close']], max_exposure=None,
                 short_exposure_factor=1.5)
+        simulation_statistics.clear()
         simulation_graph.close()
         
         # Generate signal code
@@ -759,6 +761,7 @@ def calculate_co(stock_data):
             ticker_co.getTiSimulation(
                 close_values=adjusted_stock_data[['close']], max_exposure=None,
                 short_exposure_factor=1.5)
+        simulation_statistics.clear()
         simulation_graph.close()
 
         # Generate signal code
@@ -813,6 +816,7 @@ def calculate_cmo(stock_data, period=5):
             ticker_cmf.getTiSimulation(
                 close_values=adjusted_stock_data[['close']], max_exposure=None,
                 short_exposure_factor=1.5)
+        simulation_statistics.clear()
         simulation_graph.close()
 
         # Generate signal code
@@ -867,6 +871,7 @@ def calculate_cci(stock_data, period=5):
             ticker_cci.getTiSimulation(
                 close_values=adjusted_stock_data[['close']], max_exposure=None,
                 short_exposure_factor=1.5)
+        simulation_statistics.clear()
         simulation_graph.close()
 
         # Generate signal code
@@ -924,6 +929,7 @@ def calculate_dpo(stock_data, period=6):
             ticker_dpo.getTiSimulation(
                 close_values=adjusted_stock_data[['close']], max_exposure=None,
                 short_exposure_factor=1.5)
+        simulation_statistics.clear()
         simulation_graph.close()
 
         # Generate signal code
@@ -981,6 +987,7 @@ def calculate_dmi(stock_data):
             ticker_dmi.getTiSimulation(
                 close_values=adjusted_stock_data[['close']], max_exposure=None,
                 short_exposure_factor=1.5)
+        simulation_statistics.clear()
         simulation_graph.close()
 
         # Generate signal code

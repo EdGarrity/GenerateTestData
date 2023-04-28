@@ -5,7 +5,7 @@
 
 import numpy as np
 import pandas as pd
-from tti.indicators import AccumulationDistributionLine
+import tti
 
 def is_stock_data_empty(data):
     """
@@ -641,7 +641,7 @@ def calculate_adl(stock_data):
     Returns:
         pandas.Series: A new series containing the ADX values for each row in the input DataFrame.
     """
-    print("calculate_adl_ti(stock_data):")
+    print("calculate_adl(stock_data):")
     
     adl_attribute_name = 'adl_value'
     adl_signal_attribute_name = 'adl_signal'
@@ -658,19 +658,119 @@ def calculate_adl(stock_data):
         adjusted_stock_data["Volume"] = stock_data.loc[ticker_mask, "Adj_Volume"]
 
         # Calculate Accumulation/Distribution Indicator
-        ticker_adl = AccumulationDistributionLine(input_data=adjusted_stock_data)
+        ticker_adl = tti.indicators.AccumulationDistributionLine(
+            input_data=adjusted_stock_data)
         
         # Generate trading signal
         simulation_data, simulation_statistics, simulation_graph = \
             ticker_adl.getTiSimulation(
                 close_values=adjusted_stock_data[['close']], max_exposure=None,
                 short_exposure_factor=1.5)
-        
-        # Generate signal code
-        simulation_data['signal_code'] = simulation_data['signal'].map({'buy': 1, 'sell': -1, 'hold': 0})
+        simulation_graph.close()
 
+        # Generate signal code
+        simulation_data['signal_code'] = simulation_data['signal'].map({'buy': -1, 'sell': 1, 'hold': 0})
+       
         stock_data.loc[ticker_mask, adl_attribute_name] = ticker_adl.getTiData()['adl']
         stock_data.loc[ticker_mask, adl_signal_attribute_name] = simulation_data['signal_code']
+
+    return stock_data
+
+
+def calculate_cmf(stock_data, period=5):
+    """
+    Chaikin Money Flow measures the amount of Money Flow Volume over a specific period.
+    
+    Args:
+        stock_data (pandas.DataFrame): The input DataFrame with columns for high, low, and close prices.
+        period (int): The number of periods to use for calculating the CMF. Default is 5.
+
+    Returns:
+        pandas.Series: A new series containing the CMF values for each row in the input DataFrame.
+    """
+    print("calculate_cmf(", period, ")):")
+
+    cmf_attribute_name = 'cmf_value'
+    cmf_signal_attribute_name = 'cmf_signal'
+
+    for ticker in list_stocks(stock_data):
+        ticker_mask = stock_data['Stock'] == ticker
+
+        # Use the ChaikinMoneyFlow function in the Trading Technical Indicators (tti) library
+        adjusted_stock_data = pd.DataFrame()
+        adjusted_stock_data["Open"] = stock_data.loc[ticker_mask, "Adj_Open"]
+        adjusted_stock_data["High"] = stock_data.loc[ticker_mask, "Adj_High"]
+        adjusted_stock_data["Low"] = stock_data.loc[ticker_mask, "Adj_Low"]
+        adjusted_stock_data["Close"] = stock_data.loc[ticker_mask, "Adj Close"]
+        adjusted_stock_data["Volume"] = stock_data.loc[ticker_mask, "Adj_Volume"]
+
+        # Calculate ChaikinMoneyFlow
+        ticker_cmf = tti.indicators.ChaikinMoneyFlow(
+            input_data=adjusted_stock_data, period=period)
+
+        # Generate trading signal
+        simulation_data, simulation_statistics, simulation_graph = \
+            ticker_cmf.getTiSimulation(
+                close_values=adjusted_stock_data[['close']], max_exposure=None,
+                short_exposure_factor=1.5)
+        simulation_graph.close()
+        
+        # Generate signal code
+        simulation_data['signal_code'] = simulation_data['signal'].map(
+            {'buy': -1, 'sell': 1, 'hold': 0})
+
+        stock_data.loc[ticker_mask, cmf_attribute_name] = ticker_cmf.getTiData()['cmf']
+        stock_data.loc[ticker_mask, cmf_signal_attribute_name] = simulation_data['signal_code']
+
+    return stock_data
+
+
+def calculate_co(stock_data):
+    """
+    The oscillator measures the accumulation-distribution line of moving 
+    average convergence-divergence (MACD).    
+    
+    Args:
+        stock_data (pandas.DataFrame): The input DataFrame with columns for high, low, and close prices.
+
+    Returns:
+        pandas.Series: A new series containing the values for each row in the input DataFrame.
+    """
+    print("calculate_co(stock_data):")
+
+    co_attribute_name = 'co_value'
+    co_signal_attribute_name = 'co_signal'
+
+    for ticker in list_stocks(stock_data):
+        ticker_mask = stock_data['Stock'] == ticker
+
+        # Use the ChaikinOscillator function in the Trading Technical Indicators (tti) library
+        adjusted_stock_data = pd.DataFrame()
+        adjusted_stock_data["Open"] = stock_data.loc[ticker_mask, "Adj_Open"]
+        adjusted_stock_data["High"] = stock_data.loc[ticker_mask, "Adj_High"]
+        adjusted_stock_data["Low"] = stock_data.loc[ticker_mask, "Adj_Low"]
+        adjusted_stock_data["Close"] = stock_data.loc[ticker_mask, "Adj Close"]
+        adjusted_stock_data["Volume"] = stock_data.loc[ticker_mask, "Adj_Volume"]
+
+        # Calculate Indicator
+        ticker_co = tti.indicators.ChaikinOscillator(
+            input_data=adjusted_stock_data)
+
+        # Generate trading signal
+        simulation_data, simulation_statistics, simulation_graph = \
+            ticker_co.getTiSimulation(
+                close_values=adjusted_stock_data[['close']], max_exposure=None,
+                short_exposure_factor=1.5)
+        simulation_graph.close()
+
+        # Generate signal code
+        simulation_data['signal_code'] = simulation_data['signal'].map(
+            {'buy': -1, 'sell': 1, 'hold': 0})
+
+        stock_data.loc[ticker_mask, co_attribute_name] = ticker_co.getTiData()[
+            'co']
+        stock_data.loc[ticker_mask,
+                       co_signal_attribute_name] = simulation_data['signal_code']
 
     return stock_data
 
@@ -690,6 +790,7 @@ def generate(stock_data):
     
     stock_data = calculate_obv(stock_data)
     stock_data = calculate_adl(stock_data)
+    stock_data = calculate_co(stock_data)
 
     ticker_fields = ['Norm_Adj_Open',
                      'Norm_Adj_High',
@@ -716,6 +817,7 @@ def generate(stock_data):
         stock_data = calculate_stoch_rsi(stock_data, period)
         stock_data = calculate_atr(stock_data, period)
         stock_data = calculate_adx(stock_data, period)
+        stock_data = calculate_cmf(stock_data, period)
 
     stock_data = calculate_macd(stock_data)
     stock_data = calculate_rps(stock_data, 'FXAIX')

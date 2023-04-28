@@ -938,6 +938,65 @@ def calculate_dpo(stock_data, period=6):
     return stock_data
 
 
+def calculate_dmi(stock_data):
+    """
+    The directional movement index (DMI) is an indicator developed by J. Welles 
+    Wilder in 1978 that identifies in which direction the price of an asset is 
+    moving. The indicator does this by comparing prior highs and lows and 
+    drawing two lines: a positive directional movement line (+DI) and a 
+    negative directional movement line (-DI).
+    
+    Args:
+        stock_data (pandas.DataFrame): The input DataFrame with columns for high, low, and close prices.
+
+    Returns:
+        pandas.Series: A new series containing the values for each row in the input DataFrame.
+    """
+    print("calculate_dmi():")
+
+    pdi_attribute_name = 'dmi_pdi'
+    mdi_attribute_name = 'dmi_mdi'
+    dx_attribute_name = 'dmi_dx'
+    adx_attribute_name = 'dmi_adx'
+    adxr_attribute_name = 'dmi_adxr'
+    dmi_signal_attribute_name = 'dmi_signal'
+
+    for ticker in list_stocks(stock_data):
+        ticker_mask = stock_data['Stock'] == ticker
+
+        # Use the DirectionalMovementIndex function in the Trading Technical Indicators (tti) library
+        adjusted_stock_data = pd.DataFrame()
+        adjusted_stock_data["Open"] = stock_data.loc[ticker_mask, "Adj_Open"]
+        adjusted_stock_data["High"] = stock_data.loc[ticker_mask, "Adj_High"]
+        adjusted_stock_data["Low"] = stock_data.loc[ticker_mask, "Adj_Low"]
+        adjusted_stock_data["Close"] = stock_data.loc[ticker_mask, "Adj Close"]
+        adjusted_stock_data["Volume"] = stock_data.loc[ticker_mask, "Adj_Volume"]
+
+        # Calculate Indicator
+        ticker_dmi = tti.indicators.DirectionalMovementIndex(
+            input_data=adjusted_stock_data)
+
+        # Generate trading signal
+        simulation_data, simulation_statistics, simulation_graph = \
+            ticker_dmi.getTiSimulation(
+                close_values=adjusted_stock_data[['close']], max_exposure=None,
+                short_exposure_factor=1.5)
+        simulation_graph.close()
+
+        # Generate signal code
+        simulation_data['signal_code'] = simulation_data['signal'].map(
+            {'buy': -1, 'sell': 1, 'hold': 0})
+
+        stock_data.loc[ticker_mask, pdi_attribute_name] = ticker_dmi.getTiData()['+di']
+        stock_data.loc[ticker_mask, mdi_attribute_name] = ticker_dmi.getTiData()['-di']
+        stock_data.loc[ticker_mask, dx_attribute_name] = ticker_dmi.getTiData()['dx']
+        stock_data.loc[ticker_mask, adx_attribute_name] = ticker_dmi.getTiData()['adx']
+        stock_data.loc[ticker_mask, adxr_attribute_name] = ticker_dmi.getTiData()['adxr']
+        stock_data.loc[ticker_mask, dmi_signal_attribute_name] = simulation_data['signal_code']
+
+    return stock_data
+
+
 def generate(stock_data):
     """
     Generate the technical analysis data needed to evaluate the stock information and identify
@@ -955,6 +1014,7 @@ def generate(stock_data):
     stock_data = calculate_obv(stock_data)
     stock_data = calculate_adl(stock_data)
     stock_data = calculate_co(stock_data)
+    stock_data = calculate_dmi(stock_data)
 
     ticker_fields = ['Norm_Adj_Open',
                      'Norm_Adj_High',

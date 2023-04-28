@@ -676,7 +676,6 @@ def calculate_adl(stock_data):
 
     return stock_data
 
-
 def calculate_cmf(stock_data, period=5):
     """
     Chaikin Money Flow measures the amount of Money Flow Volume over a specific period.
@@ -688,7 +687,7 @@ def calculate_cmf(stock_data, period=5):
     Returns:
         pandas.Series: A new series containing the CMF values for each row in the input DataFrame.
     """
-    print("calculate_cmf(", period, ")):")
+    print("calculate_cmf(", period, "):")
 
     cmf_attribute_name = 'cmf_value'
     cmf_signal_attribute_name = 'cmf_signal'
@@ -723,7 +722,6 @@ def calculate_cmf(stock_data, period=5):
         stock_data.loc[ticker_mask, cmf_signal_attribute_name] = simulation_data['signal_code']
 
     return stock_data
-
 
 def calculate_co(stock_data):
     """
@@ -774,6 +772,60 @@ def calculate_co(stock_data):
 
     return stock_data
 
+
+def calculate_cmo(stock_data, period=5):
+    """
+    The Chande Momentum Oscillator (CMO) is a technical momentum indicator 
+    developed by Tushar Chande. The CMO indicator is created by calculating 
+    the difference between the sum of all recent higher closes and the sum of 
+    all recent lower closes and then dividing the result by the sum of all 
+    price movement over a given time period.
+    
+    Args:
+        stock_data (pandas.DataFrame): The input DataFrame with columns for high, low, and close prices.
+        period (int): The number of periods to use for calculating the CMF. Default is 5.
+
+    Returns:
+        pandas.Series: A new series containing the values for each row in the input DataFrame.
+    """
+    print("calculate_cmo(", period, "):")
+
+    cmo_attribute_name = 'cmo_value'
+    cmo_signal_attribute_name = 'cmo_signal'
+
+    for ticker in list_stocks(stock_data):
+        ticker_mask = stock_data['Stock'] == ticker
+
+        # Use the ChandeMomentumOscillator function in the Trading Technical Indicators (tti) library
+        adjusted_stock_data = pd.DataFrame()
+        adjusted_stock_data["Open"] = stock_data.loc[ticker_mask, "Adj_Open"]
+        adjusted_stock_data["High"] = stock_data.loc[ticker_mask, "Adj_High"]
+        adjusted_stock_data["Low"] = stock_data.loc[ticker_mask, "Adj_Low"]
+        adjusted_stock_data["Close"] = stock_data.loc[ticker_mask, "Adj Close"]
+        adjusted_stock_data["Volume"] = stock_data.loc[ticker_mask, "Adj_Volume"]
+
+        # Calculate ChandeMomentumOscillator
+        ticker_cmf = tti.indicators.ChandeMomentumOscillator(
+            input_data=adjusted_stock_data, period=period)
+
+        # Generate trading signal
+        simulation_data, simulation_statistics, simulation_graph = \
+            ticker_cmf.getTiSimulation(
+                close_values=adjusted_stock_data[['close']], max_exposure=None,
+                short_exposure_factor=1.5)
+        simulation_graph.close()
+
+        # Generate signal code
+        simulation_data['signal_code'] = simulation_data['signal'].map(
+            {'buy': -1, 'sell': 1, 'hold': 0})
+
+        stock_data.loc[ticker_mask, cmo_attribute_name] = ticker_cmf.getTiData()[
+            'cmo']
+        stock_data.loc[ticker_mask,
+                       cmo_signal_attribute_name] = simulation_data['signal_code']
+
+    return stock_data
+
 def generate(stock_data):
     """
     Generate the technical analysis data needed to evaluate the stock information and identify
@@ -818,6 +870,7 @@ def generate(stock_data):
         stock_data = calculate_atr(stock_data, period)
         stock_data = calculate_adx(stock_data, period)
         stock_data = calculate_cmf(stock_data, period)
+        stock_data = calculate_cmo(stock_data, period)
 
     stock_data = calculate_macd(stock_data)
     stock_data = calculate_rps(stock_data, 'FXAIX')

@@ -3,6 +3,7 @@
  periods in that range.
 """
 
+import importlib
 import numpy as np
 import pandas as pd
 import tti
@@ -62,6 +63,25 @@ def sort_data(dataframe):
     """
 
     dataframe.sort_index(inplace=True)
+
+
+def call_lib_function(module_name, function_name, input_data, period):
+    # Import the module dynamically based on its name
+    try:
+        module = importlib.import_module(module_name)
+    except ImportError:
+        raise ValueError(f"Module {module_name} not found")
+
+    # Get the function object by its name from the imported module
+    try:
+        function = getattr(module, function_name)
+    except AttributeError:
+        raise ValueError(
+            f"Function {function_name} not found in module {module_name}")
+
+    # Call the function with the specified arguments and keyword arguments
+    return function(input_data, period)
+
 
 def calculate_aggregate(stock_data, period):
     """
@@ -1059,28 +1079,83 @@ def calculate_dema(stock_data, period=5):
     return stock_data
 
 
-def calculate_eom(stock_data, period=40):
-    """
-    Ease of Movement (EOM or EMV) indicator is a technical study that attempts 
-    to quantify a mix of momentum and volume information into one value.  The 
-    intent is to use this value to discern whether prices are able to rise, or 
-    fall, with little resistance in the directional movement.
+# def calculate_eom(stock_data, period=40):
+#     """
+#     Ease of Movement (EOM or EMV) indicator is a technical study that attempts 
+#     to quantify a mix of momentum and volume information into one value.  The 
+#     intent is to use this value to discern whether prices are able to rise, or 
+#     fall, with little resistance in the directional movement.
 
-    Theoretically, if prices move easily, they will continue to do so for a 
-    period of time that can be traded effectively.
+#     Theoretically, if prices move easily, they will continue to do so for a 
+#     period of time that can be traded effectively.
     
+#     Args:
+#         stock_data (pandas.DataFrame): The input DataFrame with columns for high, low, and close prices.
+#         period (int): The number of periods to use for calculating the CMF. Default is 6.
+
+#     Returns:
+#         pandas.Series: A new series containing the values for each row in the input DataFrame.
+#     """
+#     print("calculate_eom(", period, "):")
+
+#     emv_attribute_name = 'emv_value'
+#     emv_ma_attribute_name = 'emv_ma_value'
+#     emv_signal_attribute_name = 'emv_signal'
+
+#     for ticker in list_stocks(stock_data):
+#         ticker_mask = stock_data['Stock'] == ticker
+
+#         # Use the EaseOfMovement function in the Trading Technical Indicators (tti) library
+#         adjusted_stock_data = pd.DataFrame()
+#         adjusted_stock_data["Open"] = stock_data.loc[ticker_mask, "Adj_Open"]
+#         adjusted_stock_data["High"] = stock_data.loc[ticker_mask, "Adj_High"]
+#         adjusted_stock_data["Low"] = stock_data.loc[ticker_mask, "Adj_Low"]
+#         adjusted_stock_data["Close"] = stock_data.loc[ticker_mask, "Adj Close"]
+#         adjusted_stock_data["Volume"] = stock_data.loc[ticker_mask, "Adj_Volume"]
+
+#         # Calculate EaseOfMovement
+#         ticker_dema = tti.indicators.EaseOfMovement(
+#             input_data=adjusted_stock_data, period=period)
+
+#         # Generate trading signal
+#         simulation_data, simulation_statistics, simulation_graph = \
+#             ticker_dema.getTiSimulation(
+#                 close_values=adjusted_stock_data[['close']], max_exposure=None,
+#                 short_exposure_factor=1.5)
+#         simulation_statistics.clear()
+#         simulation_graph.close()
+
+#         # Generate signal code
+#         simulation_data['signal_code'] = simulation_data['signal'].map(
+#             {'buy': -1, 'sell': 1, 'hold': 0})
+
+#         stock_data.loc[ticker_mask, emv_attribute_name] = ticker_dema.getTiData()[
+#             'emv']
+#         stock_data.loc[ticker_mask, emv_ma_attribute_name] = ticker_dema.getTiData()[
+#             'emv_ma']
+#         stock_data.loc[ticker_mask,
+#                        emv_signal_attribute_name] = simulation_data['signal_code']
+
+#     return stock_data
+
+
+def calculate_tti(stock_data, tti_function, period=None, tti_col1_name=None, tti_col2_name=None):
+    """
+    Calculate the technical indicator
+        
     Args:
         stock_data (pandas.DataFrame): The input DataFrame with columns for high, low, and close prices.
+        tti_function (string): Trading Technical Indicator function name.
         period (int): The number of periods to use for calculating the CMF. Default is 6.
 
     Returns:
         pandas.Series: A new series containing the values for each row in the input DataFrame.
     """
-    print("calculate_eom(", period, "):")
+    print("calculate_tti(", tti_function, ":", period, "):")
 
-    emv_attribute_name = 'emv_value'
-    emv_ma_attribute_name = 'emv_ma_value'
-    emv_signal_attribute_name = 'emv_signal'
+    # emv_attribute_name = 'emv_value'
+    # emv_ma_attribute_name = 'emv_ma_value'
+    # emv_signal_attribute_name = 'emv_signal'
 
     for ticker in list_stocks(stock_data):
         ticker_mask = stock_data['Stock'] == ticker
@@ -1094,9 +1169,9 @@ def calculate_eom(stock_data, period=40):
         adjusted_stock_data["Volume"] = stock_data.loc[ticker_mask, "Adj_Volume"]
 
         # Calculate EaseOfMovement
-        ticker_dema = tti.indicators.EaseOfMovement(
-            input_data=adjusted_stock_data, period=period)
-
+        ticker_dema = call_lib_function("tti.indicators", tti_function,
+                      input_data=adjusted_stock_data, period=period)
+        
         # Generate trading signal
         simulation_data, simulation_statistics, simulation_graph = \
             ticker_dema.getTiSimulation(
@@ -1109,12 +1184,9 @@ def calculate_eom(stock_data, period=40):
         simulation_data['signal_code'] = simulation_data['signal'].map(
             {'buy': -1, 'sell': 1, 'hold': 0})
 
-        stock_data.loc[ticker_mask, emv_attribute_name] = ticker_dema.getTiData()[
-            'emv']
-        stock_data.loc[ticker_mask, emv_ma_attribute_name] = ticker_dema.getTiData()[
-            'emv_ma']
-        stock_data.loc[ticker_mask,
-                       emv_signal_attribute_name] = simulation_data['signal_code']
+        stock_data.loc[ticker_mask, tti_col1_name+'_value'] = ticker_dema.getTiData()[tti_col1_name]
+        stock_data.loc[ticker_mask, tti_col2_name+'_value'] = ticker_dema.getTiData()[tti_col2_name]
+        stock_data.loc[ticker_mask,tti_col1_name+'_signal'] = simulation_data['signal_code']
 
     return stock_data
 
@@ -1168,7 +1240,8 @@ def generate(stock_data):
         stock_data = calculate_cci(stock_data, period)
         stock_data = calculate_dpo(stock_data, period)
         stock_data = calculate_dema(stock_data, period)
-        stock_data = calculate_eom(stock_data, period)
+        stock_data = calculate_tti(
+            stock_data, "EaseOfMovement", period, 'emv', 'emv_ma')
 
     stock_data = calculate_macd(stock_data)
     stock_data = calculate_rps(stock_data, 'FXAIX')

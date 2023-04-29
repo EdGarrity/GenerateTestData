@@ -1223,6 +1223,7 @@ def generate(stock_data):
     stock_data = calculate_co(stock_data)
     stock_data = calculate_dmi(stock_data)
     stock_data = calculate_tti(stock_data, "FibonacciRetracement")
+    stock_data = calculate_tti(stock_data, "IchimokuCloud")
 
     ticker_fields = ['Norm_Adj_Open',
                      'Norm_Adj_High',

@@ -1256,6 +1256,7 @@ def generate(stock_data):
         stock_data = calculate_dema(stock_data, period)
         stock_data = calculate_tti(stock_data, "EaseOfMovement", period)
         stock_data = calculate_tti(stock_data, "Envelopes", period)
+        stock_data = calculate_tti(stock_data, "ForecastOscillator", period)
 
     stock_data = calculate_macd(stock_data)
     stock_data = calculate_rps(stock_data, 'FXAIX')

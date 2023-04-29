@@ -1260,6 +1260,8 @@ def generate(stock_data):
         stock_data = calculate_tti(stock_data, "Envelopes", period)
         stock_data = calculate_tti(stock_data, "ForecastOscillator", period)
         stock_data = calculate_tti(stock_data, "IntradayMovementIndex", period)
+        stock_data = calculate_tti(
+            stock_data, "LinearRegressionIndicator", period)
 
     stock_data = calculate_macd(stock_data)
     stock_data = calculate_rps(stock_data, 'FXAIX')

@@ -1186,18 +1186,8 @@ def calculate_tti(stock_data, tti_function, period=None):
         simulation_data['signal_code'] = simulation_data['signal'].map(
             {'buy': -1, 'sell': 1, 'hold': 0})
 
-        print('\nticker_value.getTiData()\n', ticker_value.getTiData())
+        # print('\nticker_value.getTiData()\n', ticker_value.getTiData())
         
-        # stock_data.loc[ticker_mask, tti_function+"."+tti_col1_name+
-        #                '.value'] = ticker_value.getTiData()[tti_col1_name]
-        
-        # if (tti_col2_name is not None):
-        #     stock_data.loc[ticker_mask, tti_function+'.'+tti_col2_name+'.value'] = ticker_value.getTiData()[tti_col2_name]
-    
-        # for col_name in (tti_col_name):
-        #     stock_data.loc[ticker_mask, tti_function+'.'+col_name +
-        #                 '.value'] = ticker_value.getTiData()[col_name]
-
         df = ticker_value.getTiData()
         
         for col_name in df.columns:
@@ -1207,9 +1197,9 @@ def calculate_tti(stock_data, tti_function, period=None):
         stock_data.loc[ticker_mask, tti_function+'.' +
                        'signal'] = simulation_data['signal_code']
 
-        print('\nticker_value.getTiData()\n', df)
-        print('\nstock_data columns\n', stock_data.columns)
-        print('\nstock_data\n', stock_data)
+        # print('\nticker_value.getTiData()\n', df)
+        # print('\nstock_data columns\n', stock_data.columns)
+        # print('\nstock_data\n', stock_data)
 
     return stock_data
 
@@ -1233,8 +1223,6 @@ def generate(stock_data):
     stock_data = calculate_co(stock_data)
     stock_data = calculate_dmi(stock_data)
     stock_data = calculate_tti(stock_data, "FibonacciRetracement")
-
-    # def calculate_tti(stock_data, tti_function, period=None, tti_col1_name=None, tti_col2_name=None):
 
     ticker_fields = ['Norm_Adj_Open',
                      'Norm_Adj_High',

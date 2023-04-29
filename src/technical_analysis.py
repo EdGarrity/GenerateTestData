@@ -1190,9 +1190,14 @@ def calculate_tti(stock_data, tti_function, period=None):
         
         df = ticker_value.getTiData()
         
-        for col_name in df.columns:
-            stock_data.loc[ticker_mask, tti_function+'.'+col_name +
-                           '.value'] = ticker_value.getTiData()[col_name]
+        if (period is None):
+            for col_name in df.columns:
+                stock_data.loc[ticker_mask, tti_function+'.'+col_name +
+                            '.value'] = ticker_value.getTiData()[col_name]
+        else:
+            for col_name in df.columns:
+                field_name = str(period) + '_day_' + tti_function + '.' + col_name + '.value'
+                stock_data.loc[ticker_mask, field_name] = ticker_value.getTiData()[col_name]
 
         stock_data.loc[ticker_mask, tti_function+'.' +
                        'signal'] = simulation_data['signal_code']

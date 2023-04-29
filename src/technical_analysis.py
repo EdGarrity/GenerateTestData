@@ -666,6 +666,7 @@ def calculate_adl(stock_data):
             ticker_adl.getTiSimulation(
                 close_values=adjusted_stock_data[['close']], max_exposure=None,
                 short_exposure_factor=1.5)
+        simulation_statistics.clear()
         simulation_graph.close()
 
         # Generate signal code
@@ -712,6 +713,7 @@ def calculate_cmf(stock_data, period=5):
             ticker_cmf.getTiSimulation(
                 close_values=adjusted_stock_data[['close']], max_exposure=None,
                 short_exposure_factor=1.5)
+        simulation_statistics.clear()
         simulation_graph.close()
         
         # Generate signal code
@@ -759,6 +761,7 @@ def calculate_co(stock_data):
             ticker_co.getTiSimulation(
                 close_values=adjusted_stock_data[['close']], max_exposure=None,
                 short_exposure_factor=1.5)
+        simulation_statistics.clear()
         simulation_graph.close()
 
         # Generate signal code
@@ -813,6 +816,7 @@ def calculate_cmo(stock_data, period=5):
             ticker_cmf.getTiSimulation(
                 close_values=adjusted_stock_data[['close']], max_exposure=None,
                 short_exposure_factor=1.5)
+        simulation_statistics.clear()
         simulation_graph.close()
 
         # Generate signal code
@@ -867,6 +871,7 @@ def calculate_cci(stock_data, period=5):
             ticker_cci.getTiSimulation(
                 close_values=adjusted_stock_data[['close']], max_exposure=None,
                 short_exposure_factor=1.5)
+        simulation_statistics.clear()
         simulation_graph.close()
 
         # Generate signal code
@@ -924,6 +929,7 @@ def calculate_dpo(stock_data, period=6):
             ticker_dpo.getTiSimulation(
                 close_values=adjusted_stock_data[['close']], max_exposure=None,
                 short_exposure_factor=1.5)
+        simulation_statistics.clear()
         simulation_graph.close()
 
         # Generate signal code
@@ -981,6 +987,7 @@ def calculate_dmi(stock_data):
             ticker_dmi.getTiSimulation(
                 close_values=adjusted_stock_data[['close']], max_exposure=None,
                 short_exposure_factor=1.5)
+        simulation_statistics.clear()
         simulation_graph.close()
 
         # Generate signal code
@@ -993,6 +1000,61 @@ def calculate_dmi(stock_data):
         stock_data.loc[ticker_mask, adx_attribute_name] = ticker_dmi.getTiData()['adx']
         stock_data.loc[ticker_mask, adxr_attribute_name] = ticker_dmi.getTiData()['adxr']
         stock_data.loc[ticker_mask, dmi_signal_attribute_name] = simulation_data['signal_code']
+
+    return stock_data
+
+
+def calculate_dema(stock_data, period=6):
+    """
+    The double exponential moving average (DEMA) is a variation on a technical 
+    indicator used to identify a potential uptrend or downtrend in the price of 
+    a stock or other asset. A moving average tracks the average price of an 
+    asset over a period to spot the point at which it establishes a new trend, 
+    moving above or below its average price.
+    
+    Args:
+        stock_data (pandas.DataFrame): The input DataFrame with columns for high, low, and close prices.
+        period (int): The number of periods to use for calculating the CMF. Default is 6.
+
+    Returns:
+        pandas.Series: A new series containing the values for each row in the input DataFrame.
+    """
+    print("calculate_dema(", period, "):")
+
+    dema_attribute_name = 'dema_value'
+    dema_signal_attribute_name = 'dema_signal'
+
+    for ticker in list_stocks(stock_data):
+        ticker_mask = stock_data['Stock'] == ticker
+
+        # Use the DoubleExponentialMovingAverage function in the Trading Technical Indicators (tti) library
+        adjusted_stock_data = pd.DataFrame()
+        adjusted_stock_data["Open"] = stock_data.loc[ticker_mask, "Adj_Open"]
+        adjusted_stock_data["High"] = stock_data.loc[ticker_mask, "Adj_High"]
+        adjusted_stock_data["Low"] = stock_data.loc[ticker_mask, "Adj_Low"]
+        adjusted_stock_data["Close"] = stock_data.loc[ticker_mask, "Adj Close"]
+        adjusted_stock_data["Volume"] = stock_data.loc[ticker_mask, "Adj_Volume"]
+
+        # Calculate DoubleExponentialMovingAverage
+        ticker_dema = tti.indicators.DoubleExponentialMovingAverage(
+            input_data=adjusted_stock_data, period=period)
+
+        # Generate trading signal
+        simulation_data, simulation_statistics, simulation_graph = \
+            ticker_dema.getTiSimulation(
+                close_values=adjusted_stock_data[['close']], max_exposure=None,
+                short_exposure_factor=1.5)
+        simulation_statistics.clear()
+        simulation_graph.close()
+
+        # Generate signal code
+        simulation_data['signal_code'] = simulation_data['signal'].map(
+            {'buy': -1, 'sell': 1, 'hold': 0})
+
+        stock_data.loc[ticker_mask, dema_attribute_name] = ticker_dema.getTiData()[
+            'dema']
+        stock_data.loc[ticker_mask,
+                       dema_signal_attribute_name] = simulation_data['signal_code']
 
     return stock_data
 
@@ -1045,6 +1107,7 @@ def generate(stock_data):
         stock_data = calculate_cmo(stock_data, period)
         stock_data = calculate_cci(stock_data, period)
         stock_data = calculate_dpo(stock_data, period)
+        stock_data = calculate_dema(stock_data, period)
 
     stock_data = calculate_macd(stock_data)
     stock_data = calculate_rps(stock_data, 'FXAIX')

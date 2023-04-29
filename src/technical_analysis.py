@@ -1004,7 +1004,7 @@ def calculate_dmi(stock_data):
     return stock_data
 
 
-def calculate_dema(stock_data, period=6):
+def calculate_dema(stock_data, period=5):
     """
     The double exponential moving average (DEMA) is a variation on a technical 
     indicator used to identify a potential uptrend or downtrend in the price of 
@@ -1059,6 +1059,66 @@ def calculate_dema(stock_data, period=6):
     return stock_data
 
 
+def calculate_eom(stock_data, period=40):
+    """
+    Ease of Movement (EOM or EMV) indicator is a technical study that attempts 
+    to quantify a mix of momentum and volume information into one value.  The 
+    intent is to use this value to discern whether prices are able to rise, or 
+    fall, with little resistance in the directional movement.
+
+    Theoretically, if prices move easily, they will continue to do so for a 
+    period of time that can be traded effectively.
+    
+    Args:
+        stock_data (pandas.DataFrame): The input DataFrame with columns for high, low, and close prices.
+        period (int): The number of periods to use for calculating the CMF. Default is 6.
+
+    Returns:
+        pandas.Series: A new series containing the values for each row in the input DataFrame.
+    """
+    print("calculate_eom(", period, "):")
+
+    emv_attribute_name = 'emv_value'
+    emv_ma_attribute_name = 'emv_ma_value'
+    emv_signal_attribute_name = 'emv_signal'
+
+    for ticker in list_stocks(stock_data):
+        ticker_mask = stock_data['Stock'] == ticker
+
+        # Use the EaseOfMovement function in the Trading Technical Indicators (tti) library
+        adjusted_stock_data = pd.DataFrame()
+        adjusted_stock_data["Open"] = stock_data.loc[ticker_mask, "Adj_Open"]
+        adjusted_stock_data["High"] = stock_data.loc[ticker_mask, "Adj_High"]
+        adjusted_stock_data["Low"] = stock_data.loc[ticker_mask, "Adj_Low"]
+        adjusted_stock_data["Close"] = stock_data.loc[ticker_mask, "Adj Close"]
+        adjusted_stock_data["Volume"] = stock_data.loc[ticker_mask, "Adj_Volume"]
+
+        # Calculate EaseOfMovement
+        ticker_dema = tti.indicators.EaseOfMovement(
+            input_data=adjusted_stock_data, period=period)
+
+        # Generate trading signal
+        simulation_data, simulation_statistics, simulation_graph = \
+            ticker_dema.getTiSimulation(
+                close_values=adjusted_stock_data[['close']], max_exposure=None,
+                short_exposure_factor=1.5)
+        simulation_statistics.clear()
+        simulation_graph.close()
+
+        # Generate signal code
+        simulation_data['signal_code'] = simulation_data['signal'].map(
+            {'buy': -1, 'sell': 1, 'hold': 0})
+
+        stock_data.loc[ticker_mask, emv_attribute_name] = ticker_dema.getTiData()[
+            'emv']
+        stock_data.loc[ticker_mask, emv_ma_attribute_name] = ticker_dema.getTiData()[
+            'emv_ma']
+        stock_data.loc[ticker_mask,
+                       emv_signal_attribute_name] = simulation_data['signal_code']
+
+    return stock_data
+
+
 def generate(stock_data):
     """
     Generate the technical analysis data needed to evaluate the stock information and identify
@@ -1095,7 +1155,7 @@ def generate(stock_data):
             stock_data = calculate_ema(stock_data, attribute_name + '_ema', field, period)
             stock_data = calculate_bb(stock_data, attribute_name + '_boiler_band', window_size=period)
 
-    for period in range(3, 31):
+    for period in range(3, 41):
         stock_data = stock_data.copy()
         attribute_name = str(period) + '_day_'
         stock_data = calculate_rsi(stock_data, attribute_name + 'rsi', period)
@@ -1108,6 +1168,7 @@ def generate(stock_data):
         stock_data = calculate_cci(stock_data, period)
         stock_data = calculate_dpo(stock_data, period)
         stock_data = calculate_dema(stock_data, period)
+        stock_data = calculate_eom(stock_data, period)
 
     stock_data = calculate_macd(stock_data)
     stock_data = calculate_rps(stock_data, 'FXAIX')

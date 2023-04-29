@@ -65,7 +65,7 @@ def sort_data(dataframe):
     dataframe.sort_index(inplace=True)
 
 
-def call_lib_function(module_name, function_name, input_data, period):
+def call_lib_function(module_name, function_name, input_data, period=None):
     # Import the module dynamically based on its name
     try:
         module = importlib.import_module(module_name)
@@ -80,8 +80,10 @@ def call_lib_function(module_name, function_name, input_data, period):
             f"Function {function_name} not found in module {module_name}")
 
     # Call the function with the specified arguments and keyword arguments
-    return function(input_data, period)
-
+    if (period is None):
+        return function(input_data)
+    else:
+        return function(input_data, period)
 
 def calculate_aggregate(stock_data, period):
     """
@@ -1139,7 +1141,7 @@ def calculate_dema(stock_data, period=5):
 #     return stock_data
 
 
-def calculate_tti(stock_data, tti_function, period=None, tti_col1_name=None, tti_col2_name=None):
+def calculate_tti(stock_data, tti_function, period=None):
     """
     Calculate the technical indicator
         
@@ -1153,14 +1155,10 @@ def calculate_tti(stock_data, tti_function, period=None, tti_col1_name=None, tti
     """
     print("calculate_tti(", tti_function, ":", period, "):")
 
-    # emv_attribute_name = 'emv_value'
-    # emv_ma_attribute_name = 'emv_ma_value'
-    # emv_signal_attribute_name = 'emv_signal'
-
     for ticker in list_stocks(stock_data):
         ticker_mask = stock_data['Stock'] == ticker
 
-        # Use the EaseOfMovement function in the Trading Technical Indicators (tti) library
+        # Use the tii function in the Trading Technical Indicators (tti) library
         adjusted_stock_data = pd.DataFrame()
         adjusted_stock_data["Open"] = stock_data.loc[ticker_mask, "Adj_Open"]
         adjusted_stock_data["High"] = stock_data.loc[ticker_mask, "Adj_High"]
@@ -1168,8 +1166,12 @@ def calculate_tti(stock_data, tti_function, period=None, tti_col1_name=None, tti
         adjusted_stock_data["Close"] = stock_data.loc[ticker_mask, "Adj Close"]
         adjusted_stock_data["Volume"] = stock_data.loc[ticker_mask, "Adj_Volume"]
 
-        # Calculate EaseOfMovement
-        ticker_value = call_lib_function("tti.indicators", tti_function,
+        # Calculate technical indcator
+        if (period is None):
+            ticker_value = call_lib_function("tti.indicators", tti_function,
+                                             input_data=adjusted_stock_data)
+        else:
+            ticker_value = call_lib_function("tti.indicators", tti_function,
                       input_data=adjusted_stock_data, period=period)
         
         # Generate trading signal
@@ -1186,13 +1188,28 @@ def calculate_tti(stock_data, tti_function, period=None, tti_col1_name=None, tti
 
         print('\nticker_value.getTiData()\n', ticker_value.getTiData())
         
-        stock_data.loc[ticker_mask, tti_function+"."+tti_col1_name+
-                       '.value'] = ticker_value.getTiData()[tti_col1_name]
+        # stock_data.loc[ticker_mask, tti_function+"."+tti_col1_name+
+        #                '.value'] = ticker_value.getTiData()[tti_col1_name]
         
-        if (tti_col2_name is not None):
-            stock_data.loc[ticker_mask, tti_function+'.'+tti_col2_name+'.value'] = ticker_value.getTiData()[tti_col2_name]
+        # if (tti_col2_name is not None):
+        #     stock_data.loc[ticker_mask, tti_function+'.'+tti_col2_name+'.value'] = ticker_value.getTiData()[tti_col2_name]
     
-        stock_data.loc[ticker_mask, tti_function+'.'+'signal'] = simulation_data['signal_code']
+        # for col_name in (tti_col_name):
+        #     stock_data.loc[ticker_mask, tti_function+'.'+col_name +
+        #                 '.value'] = ticker_value.getTiData()[col_name]
+
+        df = ticker_value.getTiData()
+        
+        for col_name in df.columns:
+            stock_data.loc[ticker_mask, tti_function+'.'+col_name +
+                           '.value'] = ticker_value.getTiData()[col_name]
+
+        stock_data.loc[ticker_mask, tti_function+'.' +
+                       'signal'] = simulation_data['signal_code']
+
+        print('\nticker_value.getTiData()\n', df)
+        print('\nstock_data columns\n', stock_data.columns)
+        print('\nstock_data\n', stock_data)
 
     return stock_data
 
@@ -1215,6 +1232,9 @@ def generate(stock_data):
     stock_data = calculate_adl(stock_data)
     stock_data = calculate_co(stock_data)
     stock_data = calculate_dmi(stock_data)
+    stock_data = calculate_tti(stock_data, "FibonacciRetracement")
+
+    # def calculate_tti(stock_data, tti_function, period=None, tti_col1_name=None, tti_col2_name=None):
 
     ticker_fields = ['Norm_Adj_Open',
                      'Norm_Adj_High',
@@ -1246,10 +1266,8 @@ def generate(stock_data):
         stock_data = calculate_cci(stock_data, period)
         stock_data = calculate_dpo(stock_data, period)
         stock_data = calculate_dema(stock_data, period)
-        stock_data = calculate_tti(
-            stock_data, "EaseOfMovement", period, 'emv', 'emv_ma')
-        stock_data = calculate_tti(
-            stock_data, "Envelopes", period, 'upper_band', 'lower_band')
+        stock_data = calculate_tti(stock_data, "EaseOfMovement", period)
+        stock_data = calculate_tti(stock_data, "Envelopes", period)
 
     stock_data = calculate_macd(stock_data)
     stock_data = calculate_rps(stock_data, 'FXAIX')

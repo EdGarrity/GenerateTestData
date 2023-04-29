@@ -1169,12 +1169,12 @@ def calculate_tti(stock_data, tti_function, period=None, tti_col1_name=None, tti
         adjusted_stock_data["Volume"] = stock_data.loc[ticker_mask, "Adj_Volume"]
 
         # Calculate EaseOfMovement
-        ticker_dema = call_lib_function("tti.indicators", tti_function,
+        ticker_value = call_lib_function("tti.indicators", tti_function,
                       input_data=adjusted_stock_data, period=period)
         
         # Generate trading signal
         simulation_data, simulation_statistics, simulation_graph = \
-            ticker_dema.getTiSimulation(
+            ticker_value.getTiSimulation(
                 close_values=adjusted_stock_data[['close']], max_exposure=None,
                 short_exposure_factor=1.5)
         simulation_statistics.clear()
@@ -1184,9 +1184,15 @@ def calculate_tti(stock_data, tti_function, period=None, tti_col1_name=None, tti
         simulation_data['signal_code'] = simulation_data['signal'].map(
             {'buy': -1, 'sell': 1, 'hold': 0})
 
-        stock_data.loc[ticker_mask, tti_col1_name+'_value'] = ticker_dema.getTiData()[tti_col1_name]
-        stock_data.loc[ticker_mask, tti_col2_name+'_value'] = ticker_dema.getTiData()[tti_col2_name]
-        stock_data.loc[ticker_mask,tti_col1_name+'_signal'] = simulation_data['signal_code']
+        print('\nticker_value.getTiData()\n', ticker_value.getTiData())
+        
+        stock_data.loc[ticker_mask, tti_function+"."+tti_col1_name+
+                       '.value'] = ticker_value.getTiData()[tti_col1_name]
+        
+        if (tti_col2_name is not None):
+            stock_data.loc[ticker_mask, tti_function+'.'+tti_col2_name+'.value'] = ticker_value.getTiData()[tti_col2_name]
+    
+        stock_data.loc[ticker_mask, tti_function+'.'+'signal'] = simulation_data['signal_code']
 
     return stock_data
 
@@ -1242,6 +1248,8 @@ def generate(stock_data):
         stock_data = calculate_dema(stock_data, period)
         stock_data = calculate_tti(
             stock_data, "EaseOfMovement", period, 'emv', 'emv_ma')
+        stock_data = calculate_tti(
+            stock_data, "Envelopes", period, 'upper_band', 'lower_band')
 
     stock_data = calculate_macd(stock_data)
     stock_data = calculate_rps(stock_data, 'FXAIX')

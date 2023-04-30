@@ -1169,10 +1169,10 @@ def calculate_tti(stock_data, tti_function, period=None):
         # Calculate technical indcator
         if (period is None):
             ticker_value = call_lib_function("tti.indicators", tti_function,
-                                             input_data=adjusted_stock_data)
+                input_data=adjusted_stock_data)
         else:
             ticker_value = call_lib_function("tti.indicators", tti_function,
-                      input_data=adjusted_stock_data, period=period)
+                input_data=adjusted_stock_data, period=period)
         
         # Generate trading signal
         simulation_data, simulation_statistics, simulation_graph = \
@@ -1194,13 +1194,15 @@ def calculate_tti(stock_data, tti_function, period=None):
             for col_name in df.columns:
                 stock_data.loc[ticker_mask, tti_function+'.'+col_name +
                             '.value'] = ticker_value.getTiData()[col_name]
+            stock_data.loc[ticker_mask, tti_function+'.' +
+                       'signal'] = simulation_data['signal_code']
         else:
             for col_name in df.columns:
-                field_name = str(period) + '_day_' + tti_function + '.' + col_name + '.value'
+                field_name = str(period) + '_day.' + tti_function + '.' + col_name + '.value'
                 stock_data.loc[ticker_mask, field_name] = ticker_value.getTiData()[col_name]
 
-        stock_data.loc[ticker_mask, tti_function+'.' +
-                       'signal'] = simulation_data['signal_code']
+            field_name = str(period) + '_day.' + tti_function+'.' + 'signal'
+            stock_data.loc[ticker_mask, field_name] = simulation_data['signal_code']
 
         # print('\nticker_value.getTiData()\n', df)
         # print('\nstock_data columns\n', stock_data.columns)
@@ -1230,6 +1232,16 @@ def generate(stock_data):
     stock_data = calculate_tti(stock_data, "FibonacciRetracement")
     stock_data = calculate_tti(stock_data, "IchimokuCloud")
     stock_data = calculate_tti(stock_data, "KlingerOscillator")
+    stock_data = calculate_tti(stock_data, "MarketFacilitationIndex")
+    stock_data = calculate_tti(stock_data, "MassIndex")
+    stock_data = calculate_tti(stock_data, "NegativeVolumeIndex")
+    stock_data = calculate_tti(stock_data, "ParabolicSAR")
+    stock_data = calculate_tti(stock_data, "PositiveVolumeIndex")
+    stock_data = calculate_tti(stock_data, "PriceAndVolumeTrend")
+    stock_data = calculate_tti(stock_data, "SwingIndex")
+    stock_data = calculate_tti(stock_data, "UltimateOscillator")
+    stock_data = calculate_tti(stock_data, "WeightedClose")
+    stock_data = calculate_tti(stock_data, "WilliamsAccumulationDistribution")
 
     ticker_fields = ['Norm_Adj_Open',
                      'Norm_Adj_High',
@@ -1265,8 +1277,24 @@ def generate(stock_data):
         stock_data = calculate_tti(stock_data, "Envelopes", period)
         stock_data = calculate_tti(stock_data, "ForecastOscillator", period)
         stock_data = calculate_tti(stock_data, "IntradayMovementIndex", period)
-        stock_data = calculate_tti(
-            stock_data, "LinearRegressionIndicator", period)
+        stock_data = calculate_tti(stock_data, "LinearRegressionIndicator", period)
+        stock_data = calculate_tti(stock_data, "LinearRegressionSlope", period)
+        stock_data = calculate_tti(stock_data, "MedianPrice", period)
+        stock_data = calculate_tti(stock_data, "Momentum", period)
+        stock_data = calculate_tti(stock_data, "PriceChannel", period)
+        stock_data = calculate_tti(stock_data, "PriceRateOfChange", period)
+        stock_data = calculate_tti(stock_data, "ProjectionBands", period)
+        stock_data = calculate_tti(stock_data, "ProjectionOscillator", period)
+        stock_data = calculate_tti(stock_data, "Qstick", period)
+        stock_data = calculate_tti(stock_data, "RelativeVolatilityIndex", period)
+        stock_data = calculate_tti(stock_data, "StandardDeviation", period)
+        stock_data = calculate_tti(stock_data, "TimeSeriesForecast", period)
+        stock_data = calculate_tti(stock_data, "TripleExponentialMovingAverage", period)
+        stock_data = calculate_tti(stock_data, "TypicalPrice", period)
+        stock_data = calculate_tti(stock_data, "VerticalHorizontalFilter", period)
+        stock_data = calculate_tti(stock_data, "VolumeRateOfChange", period)
+        stock_data = calculate_tti(stock_data, "WildersSmoothing", period)
+        stock_data = calculate_tti(stock_data, "WilliamsR", period)
 
     stock_data = calculate_macd(stock_data)
     stock_data = calculate_rps(stock_data, 'FXAIX')

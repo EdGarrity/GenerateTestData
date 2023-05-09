@@ -44,8 +44,9 @@ def list_columns(dataframe):
         columns = list_columns(dataframe)
     """
 
-    excluded_columns = ['Open', 'High', 'Low', 'Close', 'Adj Close', 'Volume', 'Stock', \
-                        'Adj_Open', 'Adj_High', 'Adj_Low', 'Adj_Volume']
+    # excluded_columns = ['Open', 'High', 'Low', 'Close', 'Adj Close', 'Volume', 'Stock', \
+    #                     'Adj_Open', 'Adj_High', 'Adj_Low', 'Adj_Volume']
+    excluded_columns = ['Open', 'High', 'Low', 'Close', 'Volume', 'Stock']
     all_columns = dataframe.columns
     columns = [column for column in all_columns if column not in excluded_columns]
     return columns

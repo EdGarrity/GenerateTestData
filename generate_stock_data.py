@@ -5,6 +5,7 @@ import pandas as pd
 import src.stock_data
 import src.technical_analysis
 import src.kv_collection
+import src.add_gdp_data
 
 
 
@@ -14,4 +15,5 @@ if __name__ == '__main__':
     stock_data = src.stock_data.get()
     stock_data = src.technical_analysis.generate(stock_data)
     test_data = src.kv_collection.load_stock_data(stock_data, test_data)
+    test_data = src.add_gdp_data.add_gdp_data(test_data, './gdp_data.csv')
     src.kv_collection.save_to_sql(test_data)

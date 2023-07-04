@@ -1,21 +1,25 @@
 """
-Write a Python function which does the following:
-1) Read a csv file which contains GDP data.  The first column in the file is 
-   the date.  The second column in the file is the GDP value.
-2) The function receives a reference to the test_data panda data frame table.  
-   The test_data table has four columns.  The first column is the name of the 
-   stock. The second column is the date. The thrird column is the key.  The 
-   fourth column is the value.
-3) The function will add a row in the test_data table for every business day in 
-   the range provided to the function.  For each row created, the function will 
-   store the string "GDP" in the first and third column.  The function will 
-   store the most recent GDP value with respect to the date of the row in the 
-   third column.  If the GDP table does not have a value for that date, the 
-   function will use the previous value in the GDP table.
-4) The function will return the updated test_data table.
+Write a Python function which does the following: 
+1) Read a csv text file which contains GDP data. The first column in the file 
+is a string named 'date'. The second column in the file is a double named 
+'value'. The first column needs to be converted from a string to a date.  Here 
+are some samples of the dates in the first column: '7/1/2021', '10/1/2021', 
+'10/1/2022'.
+2) The function receives a reference to the test_data panda data frame table. 
+The test_data table has four columns. The first column is a string named 
+'Stock'. The second column is of type date and is named 'date'. The third 
+column is a string named 'key'. The fourth column is a double named 'value'. 
+3) For each row in the provided test_data table the function will add a row in 
+the new_test_data table with the first column of the new row equal to the 
+string 'GDP', the second columnd of the new row equal to the date from the 
+test_date date column, the third column of the new row will be equal to the 
+string 'GDP', the fourth column of the new row will be the equal to the value 
+of the GDP with the same dat as the test_data row. If the GDP table does not 
+have a value for that date, the function will use the previous value in the GDP 
+table. 
+4) The function will return the new_test_data table.
 """
 import pandas as pd
-
 
 def add_gdp_data(test_data: pd.DataFrame, gdp_data_filename: str):
     """
@@ -34,26 +38,38 @@ def add_gdp_data(test_data: pd.DataFrame, gdp_data_filename: str):
     value for the date, the function uses the previous value in the GDP table.
     """
 
-    # Read the GDP data into a Pandas DataFrame.
-    gdp_df = pd.read_csv(gdp_data_filename)
+    # Read GDP data from the CSV file
+    gdp_data = pd.read_csv(gdp_data_filename)
 
-    # Get the start and end dates of the test data.
-    start_date = test_data['date'].min()
-    end_date = test_data['date'].max()
+    # Convert the 'date' column to datetime
+    gdp_data['date'] = pd.to_datetime(gdp_data['date'])
 
-    # Iterate over the dates in the range of the test data.
-    for date in pd.date_range(start_date, end_date):
-        # Get the most recent GDP value for the date.
-        most_recent_gdp_value = gdp_df[gdp_df['date'] <= date].sort_values(
-            'date', ascending=False)['gdp'].values[0]
+    # Sort the GDP data by date in ascending order
+    gdp_data = gdp_data.sort_values('date')
 
-        # Add a row to the test_data DataFrame for the date.
-        row = {
-            'stock': 'GDP',
-            'date': date,
-            'key': 'GDP',
-            'value': most_recent_gdp_value
-        }
-        test_data = test_data.append(row, ignore_index=True)
+    # Create a new DataFrame for updated test data
+    # new_test_data = pd.DataFrame(columns=['Stock', 'date', 'key', 'value'])
+
+    # Retrieve list of dates from test_data
+    dates = test_data['Date'].unique()
+    
+    # Iterate over each row in the test_data DataFrame
+    # for _, row in test_data.iterrows():
+    #     # Extract the date from the current row
+    #     date = row['Date']
+    for date in dates:
+        # Find the most recent GDP value with respect to the date
+        recent_gdp = gdp_data[gdp_data['date'] <= date]['value'].iloc[-1]
+
+        # Create a new row for GDP data
+        new_row = pd.DataFrame({
+            'Stock': 'GDP',
+            'Date': date,
+            'Key': 'GDP',
+            'Value': recent_gdp
+        }, index=[0])
+
+        # Concatenate the new row to new_test_data DataFrame
+        test_data = pd.concat([test_data, new_row], ignore_index=True)
 
     return test_data

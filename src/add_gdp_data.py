@@ -23,7 +23,7 @@ import pandas as pd
 
 def add_gdp_data(test_data: pd.DataFrame, gdp_data_filename: str):
     """
-    Adds GDP data to the test_data Pandas DataFrame.
+    Adds year-over-year percent change in GDP data to the test_data Pandas DataFrame.
 
     Args:
         test_data: The Pandas DataFrame to add the GDP data to.
@@ -53,20 +53,26 @@ def add_gdp_data(test_data: pd.DataFrame, gdp_data_filename: str):
     # Retrieve list of dates from test_data
     dates = test_data['Date'].unique()
     
-    # Iterate over each row in the test_data DataFrame
-    # for _, row in test_data.iterrows():
-    #     # Extract the date from the current row
-    #     date = row['Date']
+    # Iterate over each date in the test_data DataFrame
     for date in dates:
         # Find the most recent GDP value with respect to the date
         recent_gdp = gdp_data[gdp_data['date'] <= date]['value'].iloc[-1]
 
-        # Create a new row for GDP data
+        # Find the GDP value from the previous year
+        previous_year_date = date - pd.DateOffset(years=1)
+        previous_year_gdp = gdp_data[gdp_data['date']
+                                     == previous_year_date]['value'].iloc[0]
+
+        # Calculate the year-over-year percent change
+        percent_change = (recent_gdp - previous_year_gdp) / \
+            previous_year_gdp * 100
+
+        # Create a new row for GDP data with percent change
         new_row = pd.DataFrame({
             'Stock': 'GDP',
             'Date': date,
             'Key': 'GDP',
-            'Value': recent_gdp
+            'Value': percent_change
         }, index=[0])
 
         # Concatenate the new row to new_test_data DataFrame

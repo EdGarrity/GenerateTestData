@@ -58,7 +58,7 @@ def add_cpi_data(test_data: pd.DataFrame, cpi_data_filename: str):
         new_row = pd.DataFrame({
             'Stock': 'CPI',
             'Date': date,
-            'Key': 'CPI',
+            'Key': 'Yearly Percent Change',
             'Value': recent_cpi
         }, index=[0])
 

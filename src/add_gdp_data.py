@@ -58,6 +58,17 @@ def add_gdp_data(test_data: pd.DataFrame, gdp_data_filename: str):
         # Find the most recent GDP value with respect to the date
         recent_gdp = gdp_data[gdp_data['date'] <= date]['value'].iloc[-1]
 
+        # Create a new row for GDP data with percent change
+        new_row = pd.DataFrame({
+            'Stock': 'GDP',
+            'Date': date,
+            'Key': 'Close',
+            'Value': recent_gdp
+        }, index=[0])
+
+        # Concatenate the new row to new_test_data DataFrame
+        test_data = pd.concat([test_data, new_row], ignore_index=True)
+
         # Find the GDP value from the previous year
         previous_year_date = date - pd.DateOffset(years=1)
         previous_year_gdp = gdp_data[gdp_data['date']
@@ -71,7 +82,7 @@ def add_gdp_data(test_data: pd.DataFrame, gdp_data_filename: str):
         new_row = pd.DataFrame({
             'Stock': 'GDP',
             'Date': date,
-            'Key': 'GDP',
+            'Key': 'Yearly Percent Change',
             'Value': percent_change
         }, index=[0])
 

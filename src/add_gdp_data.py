@@ -67,9 +67,7 @@ def add_gdp_data(test_data: pd.DataFrame, gdp_data_filename: str):
         test_data = pd.concat([test_data, new_row], ignore_index=True)
 
         # Find the GDP value from the previous year
-        previous_year_date = date - pd.DateOffset(years=1)
-        previous_year_gdp = gdp_data[gdp_data['date']
-                                     == previous_year_date]['value'].iloc[0]
+        previous_year_gdp = gdp_data[gdp_data['date'] <= date - pd.DateOffset(years=1)]['value'].iloc[-1]
 
         # Calculate the year-over-year percent change
         percent_change = (recent_gdp - previous_year_gdp) / \

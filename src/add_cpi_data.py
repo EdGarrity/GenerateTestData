@@ -54,12 +54,32 @@ def add_cpi_data(test_data: pd.DataFrame, cpi_data_filename: str):
         # Find the most recent CPI value with respect to the date
         recent_cpi = cpi_data[cpi_data['date'] <= date]['value'].iloc[-1]
 
+        # Create a new row for CPI data for the current value
+        new_row = pd.DataFrame({
+            'Stock': 'CPI',
+            'Date': date,
+            'Key': 'Close',
+            'Value': recent_cpi
+        }, index=[0])
+
+        # Concatenate the new row to new_test_data DataFrame
+        test_data = pd.concat([test_data, new_row], ignore_index=True)
+
+        # Find the GDP value from the previous year
+        previous_year_date = date - pd.DateOffset(years=1)
+        previous_year_cpi = cpi_data[cpi_data['date']
+                                     == previous_year_date]['value'].iloc[0]
+
+        # Calculate the year-over-year percent change
+        percent_change = (recent_cpi - previous_year_cpi) / \
+            previous_year_cpi * 100
+
         # Create a new row for CPI data with percent change
         new_row = pd.DataFrame({
             'Stock': 'CPI',
             'Date': date,
             'Key': 'Yearly Percent Change',
-            'Value': recent_cpi
+            'Value': percent_change
         }, index=[0])
 
         # Concatenate the new row to new_test_data DataFrame

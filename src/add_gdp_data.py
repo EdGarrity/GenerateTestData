@@ -47,9 +47,6 @@ def add_gdp_data(test_data: pd.DataFrame, gdp_data_filename: str):
     # Sort the GDP data by date in ascending order
     gdp_data = gdp_data.sort_values('date')
 
-    # Create a new DataFrame for updated test data
-    # new_test_data = pd.DataFrame(columns=['Stock', 'date', 'key', 'value'])
-
     # Retrieve list of dates from test_data
     dates = test_data['Date'].unique()
     
@@ -58,7 +55,7 @@ def add_gdp_data(test_data: pd.DataFrame, gdp_data_filename: str):
         # Find the most recent GDP value with respect to the date
         recent_gdp = gdp_data[gdp_data['date'] <= date]['value'].iloc[-1]
 
-        # Create a new row for GDP data with percent change
+        # Create a new row for GDP data for the current value
         new_row = pd.DataFrame({
             'Stock': 'GDP',
             'Date': date,

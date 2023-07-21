@@ -15,7 +15,7 @@ if __name__ == '__main__':
     stock_data = src.stock_data.get()
     stock_data = src.technical_analysis.generate(stock_data)
     test_data = src.kv_collection.load_stock_data(stock_data, test_data)
-    test_data = src.add_gdp_data.add_gdp_data(test_data, './gdp_data.csv')
+    test_data = src.add_gdp_data.add_gdp_data(test_data, './data/gdp_data.csv')
     test_data = src.add_cpi_data.add_gdp_data(
-        test_data, './CORESTICKM159SFRBATL.csv')
+        test_data, './data/CPILFENS.csv')
     src.kv_collection.save_to_sql(test_data)

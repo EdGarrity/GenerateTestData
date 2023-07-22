@@ -82,7 +82,7 @@ def add_cpi_data(test_data: pd.DataFrame, cpi_data_filename: str):
             'Key': 'Yearly Percent Change',
             'Value': percent_change
         }, index=[0])
-
+       
         # Concatenate the new row to new_test_data DataFrame
         test_data = pd.concat([test_data, new_row], ignore_index=True)
 

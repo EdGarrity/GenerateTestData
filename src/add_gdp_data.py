@@ -21,21 +21,37 @@ table.
 """
 import pandas as pd
 
-def add_gdp_data(test_data: pd.DataFrame, gdp_data_filename: str):
+def add_gdp_data(test_data: pd.DataFrame, gdp_data_filename: str) -> pd.DataFrame:
     """
-    Adds year-over-year percent change in GDP data to the test_data Pandas DataFrame.
+    Adds GDP-related data to the input DataFrame.
 
-    Args:
-        test_data: The Pandas DataFrame to add the GDP data to.
-        gdp_data_filename: The CSV file containing the GDP data.
-        
-    This function reads the GDP data into a Pandas DataFrame, gets the start 
-    and end dates of the test data, and then iterates over the dates in the 
-    range of the test data. For each date, the function checks if it is a 
-    business day. If it is, the function gets the most recent GDP value for the 
-    date and adds a row to the test_data DataFrame with the stock "GDP", the 
-    date, the key "GDP", and the GDP value. If the GDP table does not have a 
-    value for the date, the function uses the previous value in the GDP table.
+    This function reads GDP data from a CSV file specified by 'gdp_data_filename',
+    and for each date in the 'test_data' DataFrame, it retrieves the most recent GDP value
+    with respect to that date and calculates the year-over-year percent change in GDP.
+    The calculated GDP information is then added to the 'test_data' DataFrame.
+
+    Parameters:
+        test_data (pd.DataFrame): The DataFrame containing stock market or financial data,
+                                  with a 'Date' column representing dates.
+        gdp_data_filename (str): The filename of the CSV file containing GDP data.
+    
+    Returns:
+        pd.DataFrame: A DataFrame with the updated 'test_data' including added GDP-related information.
+
+    Example:
+        Suppose we have a DataFrame 'stock_data' with columns 'Date' and 'Stock_Price',
+        and we want to add GDP data to it from the file 'gdp_data.csv'.
+        We can use the function as follows:
+
+        >>> updated_data = add_gdp_data(stock_data, 'gdp_data.csv')
+        >>> print(updated_data)
+
+    Note:
+        - The CSV file specified by 'gdp_data_filename' should contain at least two columns:
+          'date' and 'value', representing GDP data and corresponding dates respectively.
+        - The 'Date' column in the 'test_data' DataFrame should be in a valid date format,
+          compatible with the 'pd.to_datetime()' function used in this function.
+        - The 'test_data' DataFrame will be modified in place to include the additional GDP data.
     """
 
     # Read GDP data from the CSV file
@@ -67,8 +83,6 @@ def add_gdp_data(test_data: pd.DataFrame, gdp_data_filename: str):
         test_data = pd.concat([test_data, new_row], ignore_index=True)
 
         # Find the GDP value from the previous year
-        # previous_year_date = date - pd.DateOffset(years=1)
-        # previous_year_gdp = gdp_data[gdp_data['date'] == previous_year_date]['value'].iloc[-1]
         previous_year_gdp = gdp_data[gdp_data['date'] <= date - pd.DateOffset(years=1)]['value'].iloc[-1]
 
         # Calculate the year-over-year percent change

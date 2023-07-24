@@ -7,6 +7,7 @@ import src.technical_analysis
 import src.kv_collection
 import src.add_gdp_data
 import src.add_cpi_data
+import src.add_temporal_data
 
 
 if __name__ == '__main__':
@@ -17,4 +18,5 @@ if __name__ == '__main__':
     test_data = src.kv_collection.load_stock_data(stock_data, test_data)
     test_data = src.add_gdp_data.add_gdp_data(test_data, 'gdp_data.csv')
     test_data = src.add_cpi_data.add_cpi_data(test_data, 'CPILFENS.csv')
+    test_data = src.add_temporal_data.add_temporal_data(test_data)
     src.kv_collection.save_to_sql(test_data)

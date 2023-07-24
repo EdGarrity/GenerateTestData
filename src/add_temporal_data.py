@@ -1,35 +1,47 @@
-import pandas as pd
-
-def add_temporal_data(test_data: pd.DataFrame) -> pd.DataFrame:
-    """
+'''
     Adds temporal data to the input DataFrame.
 
-    For each stock and date in the 'test_data' DataFrame, this function will add the following records to the 'test_data' DataFrame:
-    
-    1) A record representing the day of the week:
-		'Stock': The stock symbol
-		'Date': The date
-		'Key': The string 'DayOfWeek'
-		'Value': A double that represents the day of the week (1 = Sunday, 2 = Monday, ...)
-	
-    2) A record representing the day of the week:
-		'Stock': The stock symbol
-		'Date': The date
-		'Key': The string 'DayOfWeek'
-		'Value': A double that represents the day of the week (1 = Sunday, 2 = Monday, ...)
-	
-	
-	calculate the day of the week (1 = Sunday, 2 = Monday, ...), the number of trading days since the start of the year, the number of trading days left in the year, and the month of the year (1 = January, 2 = February, ...).  The calculated temporal information is then added to the 'test_data' DataFrame.
+    The input test_data DataFrame consists of stock information from the first trading day of 1947 to the last trading day of 2022 in the following format:
+        'Stock': The stock symbol
+        'Date': The date
+        'Key': The string representing the dimension
+        'Value': A double that represents the value of the dimension
+
+    For each stock and date in the 'test_data' DataFrame, this function will create a new record with the following structure:
+        'Stock': The stock symbol
+        'Date': The date
+        'Key': The string 'TradingDaysSinceStartOfYear'
+        'Value': TradingDaysSinceStartOfYear
+            Where TradingDaysSinceStartOfYear is calculated by counting how many days the DataFrame has information for that stock in the given year, not how many calendar days are in the year.
+
+    For each stock and date in the 'test_data' DataFrame, this function will create a new record with the following structure:
+        'Stock': The stock symbol
+        'Date': The date
+        'Key': The string 'TradingDaysLeftInYear'
+        'Value': TradingDaysLeftInYear
+            Where TradingDaysLeftInYear is calculated by counting how many days the DataFrame has information for that stock in the given year from the current record to the last record for this stock for the year.
+            
+            The TradingDaysLeftInYear is calculated as follows:
+            1) Calculate TradingDaysInYear by counting how many days the DataFrame has information for that stock in the given year from the first record to the last record for this stock for the year.
+            2) Calculate TradingDaysLeftInYear as TradingDaysInYear - TradingDaysSinceStartOfYear
+        
+    For each stock and date in the 'test_data' DataFrame, this function will create a new record with the following structure:
+        'Stock': The stock symbol
+        'Date': The date
+        'Key': The string 'TradingDaysInWeek'
+        'Value': TradingDaysInWeek
+            Where TradingDaysInWeek is calculated by counting how many days the DataFrame has information for that stock in the given week in the year.
+        
 
     Parameters:
         test_data (pd.DataFrame): The DataFrame containing stock market or financial data.  The structure of the DataFrame is as follows:
-			'Stock': A string that represents the stock trading symbol
+            'Stock': A string that represents the stock trading symbol
             'Date': Column representing dates in a valid date format, compatible with the 'pd.to_datetime()' function
             'Key': A string that represents the dimension of the data
             'Value': A double that represents the value of the dimension.
     
     Returns:
-        pd.DataFrame: A DataFrame with the updated 'test_data' including added temporal-related information.
+        pd.DataFrame: A DataFrame with the updated 'test_data' including the added temporal-related information.
 
     Example:
         Suppose we have a DataFrame 'stock_data' with columns 'Date' and 'Stock_Price',
@@ -42,28 +54,92 @@ def add_temporal_data(test_data: pd.DataFrame) -> pd.DataFrame:
         - The 'Date' column in the 'test_data' DataFrame should be in a valid date format,
           compatible with the 'pd.to_datetime()' function used in this function.
         - The 'test_data' DataFrame will be modified in place to include the additional temporal data.
-    """
+'''
+import pandas as pd
+from datetime import datetime
 
-    # Convert the 'Date' column to a pandas datetime object
+def add_temporal_data(test_data: pd.DataFrame) -> pd.DataFrame:
+
+    # Convert Date to datetime
     test_data['Date'] = pd.to_datetime(test_data['Date'])
 
-    # Calculate day of the week (1 = Sunday, 2 = Monday, ...)
-    test_data['DayOfWeek'] = test_data['Date'].dt.dayofweek + 1
+    # Initialize dictionaries to store counts 
+    trading_days_in_year = {}
+    trading_days_since_start_of_year = {}
+    trading_days_in_week = {}
 
-    # Calculate the number of trading days since the start of the year
-    test_data['TradingDaysSinceStartOfYear'] = (test_data['Date'] -
-                                                test_data['Date'].dt.to_period('Y').dt.start_time).dt.days
+    # Calculate the number of trading days for each year and trading days in each week
+    for index, row in test_data.iterrows():
 
-    # Calculate the number of trading days left in the year
-    test_data['TradingDaysLeftInYear'] = (test_data['Date'].dt.to_period('Y').dt.end_time - test_data['Date']).dt.days
+        # Extract info
+        stock = row['Stock']
+        date = row['Date']
+        year = date.year
+        week = date.weekofyear
 
-    # Calculate the month of the year (1 = January, 2 = February, ...)
-    test_data['MonthOfYear'] = test_data['Date'].dt.month
+        # Calculate total trading days in year count
+        if stock not in trading_days_in_year:
+            trading_days_in_year[stock] = {year: 0}
+        if row['Key'] == 'Close':
+            trading_days_in_year[stock][year] += 1
+
+        # Update trading days in week count
+        if stock not in trading_days_in_week:
+            trading_days_in_week[stock] = {}
+        if year not in trading_days_in_week[stock]:
+            trading_days_in_week[stock][year] = {}
+        if row['Key'] == 'Close':
+            trading_days_in_week[stock][year][week] += 1
+
+    # Iterate through each row
+    for index, row in test_data.iterrows():
+
+        # Extract info
+        stock = row['Stock']
+        date = row['Date']
+        year = date.year
+        week = date.weekofyear
+
+        # Update trading days count
+        if stock not in trading_days_in_year:
+            trading_days_since_start_of_year[stock] = {year: 0}
+        if row['Key'] == 'Close':
+            trading_days_since_start_of_year[stock][year] += 1
+
+        # Create new row for TradingDaysSinceStartOfYear
+        new_row = {
+        'Stock': stock,
+        'Date': date,
+        'Key': 'TradingDaysSinceStartOfYear',
+        'Value': trading_days_since_start_of_year[stock][year]
+        }
+
+        # Append new row for TradingDaysSinceStartOfYear
+        test_data = test_data.append(new_row, ignore_index=True)
+
+        # Create new row for TradingDaysLeftInYear
+        new_row = {
+        'Stock': stock,
+        'Date': date,
+        'Key': 'TradingDaysSinceStartOfYear',
+        'Value': trading_days_in_year[stock][year] - trading_days_since_start_of_year[stock][year]
+        }
+
+        # Append new row for TradingDaysLeftInYear
+        test_data = test_data.append(new_row, ignore_index=True)
+
+        # Calculate the number of trading days in the week for the stock
+    
+        # Create new row for TradingDaysInWeek
+        new_row = {
+        'Stock': stock,
+        'Date': date,
+        'Key': 'TradingDaysInWeek',
+        'Value': trading_days_in_week[stock][year][week]
+        }
+
+        # Append new row for TradingDaysInWeek
+        test_data = test_data.append(new_row, ignore_index=True)
 
     return test_data
-
-# Example usage:
-# Suppose you have a DataFrame 'stock_data' with columns 'Date' and 'Stock_Price',
-# and you want to add temporal data to it.
-# updated_data = add_temporal_data(stock_data)
-# print(updated_data)
+  

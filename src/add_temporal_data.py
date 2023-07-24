@@ -88,6 +88,8 @@ def add_temporal_data(test_data: pd.DataFrame) -> pd.DataFrame:
             trading_days_in_week[stock] = {}
         if year not in trading_days_in_week[stock]:
             trading_days_in_week[stock][year] = {}
+        if week not in trading_days_in_week[stock][year]:
+            trading_days_in_week[stock][year][week] = {}
         if row['Key'] == 'Close':
             trading_days_in_week[stock][year][week] += 1
 

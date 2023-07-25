@@ -63,33 +63,43 @@ def add_temporal_data(test_data: pd.DataFrame) -> pd.DataFrame:
     # Convert Date to datetime
     test_data['Date'] = pd.to_datetime(test_data['Date'])
 
-    # Initialize dictionaries to store counts 
+        # Initialize dictionaries
     trading_days_in_year = {}
+    trading_days_in_week = {} 
     trading_days_since_start_of_year = {}
-    trading_days_in_week = {}
 
-    # Calculate the number of trading days for each year and trading days in each week
+    # Loop through rows 
     for index, row in test_data.iterrows():
 
-        # Extract info
+        # Get data
         stock = row['Stock']
-        date = row['Date']
+        date = row['Date']  
         year = date.year
         week = date.weekofyear
 
-        # Calculate total trading days in year count
+        # Handle trading days in year
+        # Check if stock dict exists
         if stock not in trading_days_in_year:
-            trading_days_in_year[stock] = {year: 0}
-        if row['Key'] == 'Close':
-            trading_days_in_year[stock][year] += 1
+            trading_days_in_year[stock] = {}
 
-        # Update trading days in week count
+        # Check if year dict exists    
+        if year not in trading_days_in_year[stock]:
+            trading_days_in_year[stock][year] = 0
+
+        # Now increment since we know keys exist
+        trading_days_in_year[stock][year] += 1
+
+        # Handle trading days in week
         if stock not in trading_days_in_week:
             trading_days_in_week[stock] = {}
         if year not in trading_days_in_week[stock]:
             trading_days_in_week[stock][year] = {}
+        
+        # Initialize week counter if needed
         if week not in trading_days_in_week[stock][year]:
-            trading_days_in_week[stock][year][week] = {}
+            trading_days_in_week[stock][year][week] = 0
+        
+        # Increment week counter
         if row['Key'] == 'Close':
             trading_days_in_week[stock][year][week] += 1
 
@@ -103,8 +113,11 @@ def add_temporal_data(test_data: pd.DataFrame) -> pd.DataFrame:
         week = date.weekofyear
 
         # Update trading days count
-        if stock not in trading_days_in_year:
-            trading_days_since_start_of_year[stock] = {year: 0}
+        # Check if stock dict exists
+        if stock not in trading_days_since_start_of_year:
+            trading_days_since_start_of_year[stock] = {}
+
+        # Increment count
         if row['Key'] == 'Close':
             trading_days_since_start_of_year[stock][year] += 1
 

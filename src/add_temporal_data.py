@@ -117,44 +117,48 @@ def add_temporal_data(test_data: pd.DataFrame) -> pd.DataFrame:
         if stock not in trading_days_since_start_of_year:
             trading_days_since_start_of_year[stock] = {}
 
+        # Check if year dict exists    
+        if year not in trading_days_since_start_of_year[stock]:
+            trading_days_since_start_of_year[stock][year] = 0
+
         # Increment count
         if row['Key'] == 'Close':
             trading_days_since_start_of_year[stock][year] += 1
 
         # Create new row for TradingDaysSinceStartOfYear
-        new_row = {
+        new_row = pd.DataFrame({
         'Stock': stock,
         'Date': date,
         'Key': 'TradingDaysSinceStartOfYear',
         'Value': trading_days_since_start_of_year[stock][year]
-        }
+        }, index=[0])
 
         # Append new row for TradingDaysSinceStartOfYear
-        test_data = test_data.append(new_row, ignore_index=True)
+        test_data = pd.concat([test_data, new_row], ignore_index=True)
 
         # Create new row for TradingDaysLeftInYear
-        new_row = {
+        new_row = pd.DataFrame({
         'Stock': stock,
         'Date': date,
         'Key': 'TradingDaysSinceStartOfYear',
         'Value': trading_days_in_year[stock][year] - trading_days_since_start_of_year[stock][year]
-        }
+        }, index=[0])
 
         # Append new row for TradingDaysLeftInYear
-        test_data = test_data.append(new_row, ignore_index=True)
+        test_data = pd.concat([test_data, new_row], ignore_index=True)
 
         # Calculate the number of trading days in the week for the stock
     
         # Create new row for TradingDaysInWeek
-        new_row = {
+        new_row = pd.DataFrame({
         'Stock': stock,
         'Date': date,
         'Key': 'TradingDaysInWeek',
         'Value': trading_days_in_week[stock][year][week]
-        }
+        }, index=[0])
 
         # Append new row for TradingDaysInWeek
-        test_data = test_data.append(new_row, ignore_index=True)
+        test_data = pd.concat([test_data, new_row], ignore_index=True)
 
     return test_data
   

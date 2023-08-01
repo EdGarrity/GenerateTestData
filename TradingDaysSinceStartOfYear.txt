@@ -1,0 +1,57 @@
+import pandas as pd
+
+def add_trading_days_since_start_of_year(stock_data: pd.DataFrame) -> pd.DataFrame:
+    """
+    Adds temporal data to the input DataFrame.
+
+    The input stock_data DataFrame consists of stock information for several stocks from the first trading day of 1947 to the last trading day of 2022.  The DataFrame comtains many columns.  The name of the stock is in the 'Stock' column of the DataFrame.  The date is the row.name of the DataFrame
+
+    For each record in the DataFrame, this function will add the following field:
+
+    TradingDaysSinceStartOfYear
+        Where TradingDaysSinceStartOfYear is calculated by counting how many days the DataFrame has information for that stock in the given year, not how many calendar days are in the year. (1 = First trading day of the year, 2 = second trading day of the year, ...)
+
+    Parameters:
+        stock_data (pd.DataFrame): The DataFrame containing stock market or financial data. The structure of the DataFrame is as follows:
+        'Stock': A string that represents the stock trading symbol
+        'Date': Column representing dates in a valid date format, compatible with the 'pd.to_datetime()' function
+
+    Returns:
+        pd.DataFrame: A DataFrame with the updated 'stock_data' including the added temporal-related information.
+
+    Example:
+
+        Suppose we have a DataFrame 'stock_data' with columns 'Stock' and 'Date', and we want to add temporal data to it. We can use the function as follows:
+
+        >>> updated_data = add_temporal_data(stock_data)
+        >>> print(updated_data)
+
+    Note:
+        - The 'Date' column in the 'stock_data' DataFrame should be in a valid date format, compatible with the 'pd.to_datetime()' function used in this function.
+        - The 'stock_data' DataFrame will be modified in place to include the additional temporal data.
+        
+    Test Example:
+        stock_data = pd.DataFrame({
+            'Symbol': ['AAPL',       'AAPL',       'AAPL',       'AAPL',       'AAPL',       'GOOGL',      'GOOGL',      'GOOGL',   'GOOGL', 'GOOGL'],
+            'Date':   ['2022-01-03', '2022-01-04', '2022-01-05', '2022-01-06', '2022-01-07', '2022-01-03', '2022-01-04', '2022-01-05'],
+            'Adj Close': [180.05, 182.21, None, 182.22, 182.21, 3100.0, 3095.5, 3134.0, 3144.00, 3144.00]
+        })
+        stock_data.set_index('Date', inplace=True)
+        result = add_trading_days_since_start_of_year(stock_data)
+        print(result)
+
+    Test Output:
+            Symbol  Adj Close  TradingDaysSinceStartOfYear
+        Date
+        2022-01-03   AAPL     180.05                            1
+        2022-01-04   AAPL     182.21                            2
+        2022-01-05   AAPL        NaN                            2
+        2022-01-06   AAPL     182.22							3
+        2022-01-07   AAPL     182.21                            4
+        2022-01-03  GOOGL    3100.00                            1
+        2022-01-04  GOOGL    3095.50                            2
+        2022-01-06  GOOGL    3134.00                            3
+        2023-01-02  GOOGL    3144.00                            1
+        2023-01-03  GOOGL    3144.00                            2
+    """
+    # Function implementation goes here...

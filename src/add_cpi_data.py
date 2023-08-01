@@ -6,7 +6,7 @@ is a string named 'date'. The second column in the file is a double named
 are some samples of the dates in the first column: '1967-12-01', '2023-06-01'.
 2) The function receives a reference to the test_data panda data frame table. 
 The test_data table has four columns. The first column is a string named 
-'Stock'. The second column is of type date and is named 'date'. The third 
+'Symbol'. The second column is of type date and is named 'date'. The third 
 column is a string named 'key'. The fourth column is a double named 'value'. 
 3) For each row in the provided test_data table the function will add a row in 
 the new_test_data table with the first column of the new row equal to the 
@@ -71,7 +71,7 @@ def add_cpi_data(test_data: pd.DataFrame, cpi_data_filename: str) -> pd.DataFram
 
         # Create a new row for CPI data for the current value
         new_row = pd.DataFrame({
-            'Stock': 'CPI',
+            'Symbol': 'CPI',
             'Date': date,
             'Key': 'Close',
             'Value': recent_cpi
@@ -89,7 +89,7 @@ def add_cpi_data(test_data: pd.DataFrame, cpi_data_filename: str) -> pd.DataFram
 
         # Create a new row for CPI data with percent change
         new_row = pd.DataFrame({
-            'Stock': 'CPI',
+            'Symbol': 'CPI',
             'Date': date,
             'Key': 'Yearly Percent Change',
             'Value': percent_change

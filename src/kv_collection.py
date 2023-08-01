@@ -44,9 +44,9 @@ def list_columns(dataframe):
         columns = list_columns(dataframe)
     """
 
-    # excluded_columns = ['Open', 'High', 'Low', 'Close', 'Adj Close', 'Volume', 'Stock', \
+    # excluded_columns = ['Open', 'High', 'Low', 'Close', 'Adj Close', 'Volume', 'Symbol', \
     #                     'Adj_Open', 'Adj_High', 'Adj_Low', 'Adj_Volume']
-    excluded_columns = ['Open', 'High', 'Low', 'Close', 'Volume', 'Stock']
+    excluded_columns = ['Open', 'High', 'Low', 'Close', 'Volume', 'Symbol']
     all_columns = dataframe.columns
     columns = [column for column in all_columns if column not in excluded_columns]
     return columns
@@ -61,11 +61,11 @@ def load_stock_data(stock_data, test_data):
     for col_name in list_columns(stock_data):
         for index, row in stock_data.iterrows():
             # write open
-            new_record = [row['Stock'], row.name, col_name, row[col_name]]
+            new_record = [row['Symbol'], row.name, col_name, row[col_name]]
             records.append(new_record)
 
     test_data = pd.DataFrame.from_records(
-        records, columns=['Stock', 'Date', 'Key', 'Value'])
+        records, columns=['Symbol', 'Date', 'Key', 'Value'])
 
     return test_data
 

@@ -44,7 +44,7 @@ def list_stocks(data):
     """
 
     # Extract the 'stock' column from the data
-    stock_column = data['Stock']
+    stock_column = data['Symbol']
 
     # Get a list of the unique values in the 'stock' column
     unique_stocks = stock_column.unique()
@@ -111,7 +111,7 @@ def calculate_aggregate(stock_data, period):
     attribute_name = str(period) + '_day_'
 
     for stock in list_stocks(stock_data):
-        mask = stock_data['Stock'] == stock
+        mask = stock_data['Symbol'] == stock
 
         stock_data.loc[mask, attribute_name + 'MA'] = stock_data.loc[mask,'Norm_Adj_Close'].rolling(window=period).mean()
         stock_data.loc[mask, attribute_name + 'Min'] = stock_data.loc[mask,'Norm_Adj_Close'].rolling(window=period).min()
@@ -137,7 +137,7 @@ def calculate_sma(stock_data, name, ticker_field, period):
          period (int):
     """
     for stock in list_stocks(stock_data):
-        mask = stock_data['Stock'] == stock
+        mask = stock_data['Symbol'] == stock
 
         stock_data.loc[mask, name] = stock_data.loc[mask,
                                                     ticker_field].rolling(period).mean()
@@ -164,7 +164,7 @@ def calculate_obv(stock_data):
 
     for stock in list_stocks(stock_data):
         # Filter the dataframe to include only rows where the 'stock' column is the selected stock
-        subdata = stock_data[stock_data['Stock'] == stock]
+        subdata = stock_data[stock_data['Symbol'] == stock]
 
         # Create variable to remember the previous close
         prev_close = 0
@@ -211,7 +211,7 @@ def calculate_ema(stock_data, name, ticker_field, period):
 
     for ticker in list_stocks(stock_data):
         # Filter the dataframe to include only rows where the 'stock' column is the selected stock
-        subdata = stock_data[stock_data['Stock'] == ticker]
+        subdata = stock_data[stock_data['Symbol'] == ticker]
 
         # Create variable to remember the previous EMA
         prev_ema = 0
@@ -233,10 +233,10 @@ def calculate_ema(stock_data, name, ticker_field, period):
 #     stock_data[tr_attribute_name] = 0
 
 #     for stock in list_stocks(stock_data):
-#         high = stock_data.loc[stock_data['Stock'] == stock, 'Norm_Adj_High']
-#         low = stock_data.loc[stock_data['Stock'] == stock, 'Norm_Adj_Low']
-#         close = stock_data.loc[stock_data['Stock'] == stock, 'Norm_Adj_Close']
-#         tr = stock_data.loc[stock_data['Stock'] == stock, tr_attribute_name]
+#         high = stock_data.loc[stock_data['Symbol'] == stock, 'Norm_Adj_High']
+#         low = stock_data.loc[stock_data['Symbol'] == stock, 'Norm_Adj_Low']
+#         close = stock_data.loc[stock_data['Symbol'] == stock, 'Norm_Adj_Close']
+#         tr = stock_data.loc[stock_data['Symbol'] == stock, tr_attribute_name]
 
 #         n = high.shape[0]
 #         tr[0] = high[0] - low[0]
@@ -246,7 +246,7 @@ def calculate_ema(stock_data, name, ticker_field, period):
 #                         abs(high[i] - close[i - 1]),
 #                         abs(low[i] - close[i - 1]))
 
-#         stock_data.loc[stock_data['Stock'] == stock, tr_attribute_name] = tr
+#         stock_data.loc[stock_data['Symbol'] == stock, tr_attribute_name] = tr
 
 #     return stock_data
 
@@ -260,7 +260,7 @@ def calculate_ema(stock_data, name, ticker_field, period):
 
 #     for stock in list_stocks(stock_data):
 #         # Filter the dataframe to include only rows where the 'stock' column is the selected stock
-#         subdata = stock_data[stock_data['Stock'] == stock]
+#         subdata = stock_data[stock_data['Symbol'] == stock]
 
 #         # Create variable to remember the previous ATR
 #         prev_atr = 0
@@ -298,11 +298,11 @@ def calculate_ema(stock_data, name, ticker_field, period):
 #     stock_data[adx_name] = 0
 
 #     for stock in list_stocks(stock_data):
-#         high = stock_data.loc[stock_data['Stock'] == stock, 'Norm_Adj_High']
-#         low = stock_data.loc[stock_data['Stock'] == stock, 'Norm_Adj_Low']
-#         tr = stock_data.loc[stock_data['Stock'] == stock, tr_attribute_name]
+#         high = stock_data.loc[stock_data['Symbol'] == stock, 'Norm_Adj_High']
+#         low = stock_data.loc[stock_data['Symbol'] == stock, 'Norm_Adj_Low']
+#         tr = stock_data.loc[stock_data['Symbol'] == stock, tr_attribute_name]
 
-#         n = stock_data.loc[stock_data['Stock'] == stock].shape[0]
+#         n = stock_data.loc[stock_data['Symbol'] == stock].shape[0]
 
 #         dm_plus = np.zeros(n)
 #         dm_minus = np.zeros(n)
@@ -337,7 +337,7 @@ def calculate_ema(stock_data, name, ticker_field, period):
 #         for i in range(1, n):
 #             adx[i] = (adx[i - 1] * (period - 1) + dx[i]) / period
 
-#         stock_data.loc[stock_data['Stock'] == stock, adx_name] = adx
+#         stock_data.loc[stock_data['Symbol'] == stock, adx_name] = adx
 
 #     return stock_data
 
@@ -346,7 +346,7 @@ def calculate_bb(stock_data, bb_name, window_size=20, num_std_dev=2):
     """ https://www.investopedia.com/terms/b/bollingerbands.asp """
 
     for stock in list_stocks(stock_data):
-        mask = stock_data['Stock'] == stock
+        mask = stock_data['Symbol'] == stock
 
         # Calculate the Typical Price
         tp = (stock_data.loc[mask, 'Norm_Adj_High'] +
@@ -376,7 +376,7 @@ def calculate_rsi(stock_data, name, window_size=14):
     """ https://en.wikipedia.org/wiki/Relative_strength_index """
    
     for stock in list_stocks(stock_data):
-        mask = stock_data['Stock'] == stock
+        mask = stock_data['Symbol'] == stock
 
         # Calculate the Relative Strength Index (RSI)
         prices = stock_data.loc[mask, 'Norm_Adj_Close']
@@ -430,7 +430,7 @@ def calculate_macd(stock_data, signal_period=9):
     """
 
     for stock in list_stocks(stock_data):
-        mask = stock_data['Stock'] == stock
+        mask = stock_data['Symbol'] == stock
 
         # Calculate MACD line
         stock_data.loc[mask, 'MACD'] = stock_data.loc[mask, '12_day_Norm_Adj_Close_ema'] - stock_data.loc[mask, '26_day_Norm_Adj_Close_ema']
@@ -475,7 +475,7 @@ def stochastic_oscillator(stock_data, attribute_prefix, n=14, d=3):
     attribute_d_name = attribute_prefix + '%D'
 
     for stock in list_stocks(stock_data):
-        mask = stock_data['Stock'] == stock
+        mask = stock_data['Symbol'] == stock
 
         # Calculate Stochastic Oscillator for a given dataframe
         lowest_low = stock_data.loc[mask,'Norm_Adj_Low'].rolling(window=n).min()
@@ -510,8 +510,8 @@ def calculate_rps(stock_data, benchmark_ticker='FXAIX'):
     
     for ticker in list_stocks(stock_data):
         # if (ticker != benchmark_ticker):
-        ticker_mask = stock_data['Stock'] == ticker
-        benchmark_ticker_mask = stock_data['Stock'] == benchmark_ticker
+        ticker_mask = stock_data['Symbol'] == ticker
+        benchmark_ticker_mask = stock_data['Symbol'] == benchmark_ticker
         
         stock_data.loc[ticker_mask, attribute_name] = stock_data.loc[ticker_mask, 'Norm_Adj_Close'] / \
             stock_data.loc[benchmark_ticker_mask, 'Norm_Adj_Close']
@@ -542,7 +542,7 @@ def calculate_stoch_rsi (stock_data, period=14, k=3, d=3):
     stoch_rsi_attribute_name = str(period) + '_day_stoch_rsi'
 
     for ticker in list_stocks(stock_data):
-        ticker_mask = stock_data['Stock'] == ticker
+        ticker_mask = stock_data['Symbol'] == ticker
         
         stoch_rsi = ((stock_data.loc[ticker_mask, rsi_attribute_name] \
                       - stock_data.loc[ticker_mask, rsi_attribute_name].rolling(k).min()) \
@@ -577,7 +577,7 @@ def calculate_atr(stock_data, period=14):
     atr_attribute_name = str(period) + '_day_atr'
 
     for ticker in list_stocks(stock_data):
-        ticker_mask = stock_data['Stock'] == ticker
+        ticker_mask = stock_data['Symbol'] == ticker
 
         high = stock_data.loc[ticker_mask, 'Norm_Adj_High']
         low = stock_data.loc[ticker_mask, 'Norm_Adj_Low']
@@ -610,7 +610,7 @@ def calculate_adx(stock_data, period=14):
     adx_attribute_name = str(period) + '_day_adx'
 
     for ticker in list_stocks(stock_data):
-        ticker_mask = stock_data['Stock'] == ticker
+        ticker_mask = stock_data['Symbol'] == ticker
 
         high = stock_data.loc[ticker_mask, 'Norm_Adj_High']
         low = stock_data.loc[ticker_mask, 'Norm_Adj_Low']
@@ -669,7 +669,7 @@ def calculate_adl(stock_data):
     adl_signal_attribute_name = 'adl_signal'
 
     for ticker in list_stocks(stock_data):
-        ticker_mask = stock_data['Stock'] == ticker
+        ticker_mask = stock_data['Symbol'] == ticker
 
         # Use the AccumulationDistributionLine function in the Trading Technical Indicators (tti) library
         adjusted_stock_data = pd.DataFrame()
@@ -716,7 +716,7 @@ def calculate_cmf(stock_data, period=5):
     cmf_signal_attribute_name = 'cmf_signal'
 
     for ticker in list_stocks(stock_data):
-        ticker_mask = stock_data['Stock'] == ticker
+        ticker_mask = stock_data['Symbol'] == ticker
 
         # Use the ChaikinMoneyFlow function in the Trading Technical Indicators (tti) library
         adjusted_stock_data = pd.DataFrame()
@@ -764,7 +764,7 @@ def calculate_co(stock_data):
     co_signal_attribute_name = 'co_signal'
 
     for ticker in list_stocks(stock_data):
-        ticker_mask = stock_data['Stock'] == ticker
+        ticker_mask = stock_data['Symbol'] == ticker
 
         # Use the ChaikinOscillator function in the Trading Technical Indicators (tti) library
         adjusted_stock_data = pd.DataFrame()
@@ -819,7 +819,7 @@ def calculate_cmo(stock_data, period=5):
     cmo_signal_attribute_name = 'cmo_signal'
 
     for ticker in list_stocks(stock_data):
-        ticker_mask = stock_data['Stock'] == ticker
+        ticker_mask = stock_data['Symbol'] == ticker
 
         # Use the ChandeMomentumOscillator function in the Trading Technical Indicators (tti) library
         adjusted_stock_data = pd.DataFrame()
@@ -874,7 +874,7 @@ def calculate_cci(stock_data, period=5):
     cci_signal_attribute_name = 'cci_signal'
 
     for ticker in list_stocks(stock_data):
-        ticker_mask = stock_data['Stock'] == ticker
+        ticker_mask = stock_data['Symbol'] == ticker
 
         # Use the CommodityChannelIndex function in the Trading Technical Indicators (tti) library
         adjusted_stock_data = pd.DataFrame()
@@ -932,7 +932,7 @@ def calculate_dpo(stock_data, period=6):
     dpo_signal_attribute_name = 'dpo_signal'
 
     for ticker in list_stocks(stock_data):
-        ticker_mask = stock_data['Stock'] == ticker
+        ticker_mask = stock_data['Symbol'] == ticker
 
         # Use the DetrendedPriceOscillator function in the Trading Technical Indicators (tti) library
         adjusted_stock_data = pd.DataFrame()
@@ -990,7 +990,7 @@ def calculate_dmi(stock_data):
     dmi_signal_attribute_name = 'dmi_signal'
 
     for ticker in list_stocks(stock_data):
-        ticker_mask = stock_data['Stock'] == ticker
+        ticker_mask = stock_data['Symbol'] == ticker
 
         # Use the DirectionalMovementIndex function in the Trading Technical Indicators (tti) library
         adjusted_stock_data = pd.DataFrame()
@@ -1047,7 +1047,7 @@ def calculate_dema(stock_data, period=5):
     dema_signal_attribute_name = 'dema_signal'
 
     for ticker in list_stocks(stock_data):
-        ticker_mask = stock_data['Stock'] == ticker
+        ticker_mask = stock_data['Symbol'] == ticker
 
         # Use the DoubleExponentialMovingAverage function in the Trading Technical Indicators (tti) library
         adjusted_stock_data = pd.DataFrame()
@@ -1105,7 +1105,7 @@ def calculate_dema(stock_data, period=5):
 #     emv_signal_attribute_name = 'emv_signal'
 
 #     for ticker in list_stocks(stock_data):
-#         ticker_mask = stock_data['Stock'] == ticker
+#         ticker_mask = stock_data['Symbol'] == ticker
 
 #         # Use the EaseOfMovement function in the Trading Technical Indicators (tti) library
 #         adjusted_stock_data = pd.DataFrame()
@@ -1156,7 +1156,7 @@ def calculate_tti(stock_data, tti_function, period=None):
     print("calculate_tti(", tti_function, ":", period, "):")
 
     for ticker in list_stocks(stock_data):
-        ticker_mask = stock_data['Stock'] == ticker
+        ticker_mask = stock_data['Symbol'] == ticker
 
         # Use the tii function in the Trading Technical Indicators (tti) library
         adjusted_stock_data = pd.DataFrame()

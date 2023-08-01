@@ -33,30 +33,80 @@ import yfinance as yf
 import pandas as pd
 import sqlalchemy
 
-def load_index_data(index_symbols, start_date, end_date):
+# def load_index_data(index_symbols, start_date, end_date):
+#     """
+#     This function downloads stock data, normalizes the data, and saves it to a MS SQL database
+#     :param index_symbols: list of index symbols
+#     :param start_date: start date
+#     :param end_date: end date
+#     :return: dataframe
+#     """
+#     # download data
+#     data= pd.DataFrame()
+#     for stock in index_symbols:
+#         ticker_data = yf.download(stock, start=start_date, end=end_date)
+#         ticker_data['Stock'] = stock
+#         data = pd.concat([data, ticker_data], axis=0)
+
+#     # adjust all OHLC
+#     data['Adj_Open'] = data['Open'] / data['Close'] * data['Adj Close']
+#     data['Adj_High'] = data['High'] / data['Close'] * data['Adj Close']
+#     data['Adj_Low'] = data['Low'] / data['Close'] * data['Adj Close']
+#     data['Adj_Volume'] = data['Volume'] / data['Adj Close'] * data['Close']
+
+#     for stock in index_symbols:
+#         mask = data['Stock'] == stock
+
+#         data.loc[mask, 'Norm_Adj_Close']  \
+#             = (data.loc[mask, 'Adj Close'] - data.loc[mask, 'Adj_Low'].min()) \
+#             / (data.loc[mask, 'Adj_High'].max() - data.loc[mask, 'Adj_Low'].min())
+
+#         data.loc[mask, 'Norm_Adj_High']  \
+#             = (data.loc[mask, 'Adj_High'] - data.loc[mask, 'Adj_Low'].min()) \
+#             / (data.loc[mask, 'Adj_High'].max() - data.loc[mask, 'Adj_Low'].min())
+
+#         data.loc[mask, 'Norm_Adj_Low']  \
+#             = (data.loc[mask, 'Adj_Low'] - data.loc[mask, 'Adj_Low'].min()) \
+#             / (data.loc[mask, 'Adj_High'].max() - data.loc[mask, 'Adj_Low'].min())
+
+#         data.loc[mask, 'Norm_Adj_Open']  \
+#             = (data.loc[mask, 'Adj_Open'] - data.loc[mask, 'Adj_Low'].min()) \
+#             / (data.loc[mask, 'Adj_High'].max() - data.loc[mask, 'Adj_Low'].min())
+
+#         data.loc[mask, 'Norm_Adj_Volume']  \
+#             = (data.loc[mask, 'Adj_Volume'] - data.loc[mask, 'Adj_Volume'].min()) \
+#             / (data.loc[mask, 'Adj_Volume'].max() - data.loc[mask, 'Adj_Volume'].min())
+
+#     return data
+
+def load_index_data(index_Stocks, start_date, end_date):
     """
-    This function downloads stock data, normalizes the data, and saves it to a MS SQL database
-    :param index_symbols: list of index symbols
+    This function downloads stock data and normalizes the data.
+    :param index_Stocks: list of index Stocks
     :param start_date: start date
     :param end_date: end date
     :return: dataframe
     """
     # download data
-    data= pd.DataFrame()
-    for stock in index_symbols:
+    data = pd.DataFrame()
+    for stock in index_Stocks:
         ticker_data = yf.download(stock, start=start_date, end=end_date)
-        ticker_data['Stock'] = stock
+        ticker_data['Symbol'] = stock
         data = pd.concat([data, ticker_data], axis=0)
 
-    # adjust all OHLC
+    # Set the DataFrame index to be the row names (date)
+    data.index.name = 'Date'
+
+    # adjust all OHLC using the row names (date)
     data['Adj_Open'] = data['Open'] / data['Close'] * data['Adj Close']
     data['Adj_High'] = data['High'] / data['Close'] * data['Adj Close']
     data['Adj_Low'] = data['Low'] / data['Close'] * data['Adj Close']
     data['Adj_Volume'] = data['Volume'] / data['Adj Close'] * data['Close']
 
-    for stock in index_symbols:
-        mask = data['Stock'] == stock
+    for stock in index_Stocks:
+        mask = data['Symbol'] == stock
 
+        # The normalization calculations now use the row names (date) instead of 'Date' column
         data.loc[mask, 'Norm_Adj_Close']  \
             = (data.loc[mask, 'Adj Close'] - data.loc[mask, 'Adj_Low'].min()) \
             / (data.loc[mask, 'Adj_High'].max() - data.loc[mask, 'Adj_Low'].min())

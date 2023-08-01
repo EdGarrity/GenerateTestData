@@ -87,7 +87,3 @@ def add_trading_days_in_year(stock_data: pd.DataFrame) -> pd.DataFrame:
     stock_data['TradingDaysInYear'] = grouped_data['Date'].transform(lambda x: len(x))
 
     return stock_data
-
-if __name__ == '__main__':
-    stock_data_2 = src.add_stock_temporal_data.add_stock_temporal_data()
-    print(stock_data_2)

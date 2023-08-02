@@ -325,13 +325,116 @@ def add_week_of_month(stock_data: pd.DataFrame) -> pd.DataFrame:
         2023-02-23    AAPL     185.00   3
 		2023-02-27    AAPL     185.00   4
 		2023-02-28    AAPL     185.00   4
+		2022-12-28    AAPL     185.00   4
+        2023-01-30    AAPL     185.00   5
+    """
+   
+    return stock_data
+
+def add_week_of_year(stock_data: pd.DataFrame) -> pd.DataFrame:
+    """
+	A numeric value respresenting the week of the year (1 = first week, 2 = second week, ...)
+    for each stock in the DataFrame.
+
+    Parameters:
+        stock_data (pd.DataFrame): A DataFrame containing stock data with the following columns:
+            - 'Symbol': The stock symbol or identifier for each data record.
+            - 'Date': The date for each data record. Should be set as the DataFrame index.
+            - 'Adj Close': The adjusted closing price of the stock for each data record.
+
+    Returns:
+        pd.DataFrame: A new DataFrame with the 'WeekOfYear' field added.
+            The returned DataFrame will be the same as the input 'stock_data'
+            but with an additional column named 'WeekOfYear'.
+            The 'WeekOfYear' column will contain the number respresenting the week of the year
+            for the respective stock, week, and year combination. For non-trading days or 
+			missing data, the 'WeekOfYear' value will be 0.
+
+    Note:
+        The 'Date' column should be set as the DataFrame index, and the data should be sorted in
+        chronological order based on the date for correct results.
+
+    Example:
+        >>> stock_data = pd.DataFrame({
+        ...     'Symbol':    ['AAPL',       'AAPL',       'AAPL',       'GOOGL',      'GOOGL',      'GOOGL',      'AAPL',     'AAPL',     'AAPL',     'AAPL',     'AAPL',     'AAPL',     'AAPL',     'AAPL'],
+        ...     'Date':      ['2022-01-03', '2022-01-04', '2022-01-05', '2022-01-03', '2022-01-04', '2022-01-06', 2023-01-17, 2023-01-18, 2023-01-19, 2023-02-21, 2023-02-22, 2023-02-23, 2023-02-27, 2023-02-28],
+        ...     'Adj Close': [180.05,       182.21,       None,         3100.0,       3095.5,       3134.0,       180.00,     181.00,     182.00,     183.00,     184.00,     185.00,     185.00,     185.00]
+        ... })
+        >>> stock_data.set_index('Date', inplace=True)
+        >>> result = add_trading_days_in_year(stock_data)
+        >>> print(result)
+                     Symbol  Adj Close  WeekOfYear
+        Date
+        2022-01-03    AAPL     180.05   1
+        2022-01-04    AAPL     182.21   1
+        2022-01-05    AAPL       NaN    0
+        2022-01-03   GOOGL    3100.00   1
+        2022-01-04   GOOGL    3095.50   1
+        2022-01-06   GOOGL    3134.00   1
+        2023-01-17    AAPL     180.00   3
+        2023-01-18    AAPL     181.00   3
+        2023-01-19    AAPL     182.00   3
+        2023-02-21    AAPL     183.00   8
+        2023-02-22    AAPL     184.00   8
+        2023-02-23    AAPL     185.00   8
+		2023-02-27    AAPL     185.00   9
+		2023-02-28    AAPL     185.00   9
     """
 
-    # Get the ISO week number and week day for each date
+    # Get the ISO week number and year for each date
     iso_calendar = stock_data.index.isocalendar()
-    stock_data['WeekOfMonth'] = iso_calendar.week
+    stock_data['WeekOfYear'] = iso_calendar.week
 
     # Update the index name to 'Date' (if needed)
     # stock_data.index.name = 'Date'
 
+    return stock_data
+
+def add_month_of_year(stock_data: pd.DataFrame) -> pd.DataFrame:
+    """
+    A numeric value respresenting the month of the yearh (1 = first month, 2 = second month, ...) 
+    for each stock in the DataFrame.
+
+    Parameters:
+        stock_data (pd.DataFrame): A DataFrame containing stock data with the following columns:
+            - 'Symbol': The stock symbol or identifier for each data record.
+            - 'Date': The date for each data record. Should be set as the DataFrame index.
+            - 'Adj Close': The adjusted closing price of the stock for each data record.
+
+    Returns:
+        pd.DataFrame: A new DataFrame with the 'MonthOfYear' field added.
+            The returned DataFrame will be the same as the input 'stock_data'
+            but with an additional column named 'MonthOfYear'.
+            The 'MonthOfYear' column will contain the number of the month
+
+    Note:
+        The 'Date' column should be set as the DataFrame index, and the data should be sorted in
+        chronological order based on the date for correct results.
+
+    Example:
+        >>> stock_data = pd.DataFrame({
+        ...     'Symbol':    ['AAPL',       'AAPL',       'AAPL',       'GOOGL',      'GOOGL',      'GOOGL',      'AAPL',     'AAPL',     'AAPL',     'AAPL',     'AAPL',     'AAPL'],
+        ...     'Date':      ['2022-01-03', '2022-01-04', '2022-01-05', '2022-01-03', '2022-01-04', '2022-01-06', 2023-01-17, 2023-01-18, 2023-01-19, 2023-02-21, 2023-02-22, 2023-02-23],
+        ...     'Adj Close': [180.05,       182.21,       None,         3100.0,       3095.5,       3134.0,       180.00,     181.00,     182.00,     183.00,     184.00,     185.00]
+        ... })
+        >>> stock_data.set_index('Date', inplace=True)
+        >>> result = add_trading_days_in_year(stock_data)
+        >>> print(result)
+                     Symbol  Adj Close  MonthOfYear
+        Date
+        2022-01-03    AAPL     180.05   1
+        2022-01-04    AAPL     182.21   1
+        2022-01-05    AAPL       NaN    0
+        2022-01-03   GOOGL    3100.00   1
+        2022-01-04   GOOGL    3095.50   1
+        2022-01-06   GOOGL    3134.00   1
+        2023-01-17    AAPL     180.00   1
+        2023-01-18    AAPL     181.00   1
+        2023-01-19    AAPL     182.00   1
+        2023-02-21    AAPL     183.00   2
+        2023-02-22    AAPL     184.00   2
+        2023-02-23    AAPL     185.00   2
+    """
+	
+    stock_data['MonthOfYear'] = stock_data.index.month
     return stock_data

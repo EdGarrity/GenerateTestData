@@ -206,9 +206,6 @@ def add_trading_days_in_week(stock_data: pd.DataFrame) -> pd.DataFrame:
         2023-02-22    AAPL     184.00                 4
         2023-02-23    AAPL     185.00                 4
     """
-import pandas as pd
-
-def add_trading_days_in_week(stock_data: pd.DataFrame) -> pd.DataFrame:
     # Convert the 'Date' column to a DatetimeIndex
     stock_data.index = pd.to_datetime(stock_data.index)
 
@@ -221,5 +218,61 @@ def add_trading_days_in_week(stock_data: pd.DataFrame) -> pd.DataFrame:
 
     # Calculate TradingDaysInWeek for each stock, year, and week
     stock_data['TradingDaysInWeek'] = grouped_data['Adj Close'].transform(lambda x: x.notnull().sum())
+
+    return stock_data
+
+def add_day_of_week(stock_data: pd.DataFrame) -> pd.DataFrame:
+    """
+    A numeric value representing the day of the week (0 = Sunday, 1 = Monday, ...) 
+    for each stock in the DataFrame.
+
+    Parameters:
+        stock_data (pd.DataFrame): A DataFrame containing stock data with the following columns:
+            - 'Symbol': The stock symbol or identifier for each data record.
+            - 'Date': The date for each data record. Should be set as the DataFrame index.
+            - 'Adj Close': The adjusted closing price of the stock for each data record.
+
+    Returns:
+        pd.DataFrame: A new DataFrame with the 'DayOfWeek' field added.
+            The returned DataFrame will be the same as the input 'stock_data'
+            but with an additional column named 'DayOfWeek'.
+            The 'DayOfWeek' column will contain the number of trading days in each week
+            for the respective stock, week, and year combination. For non-trading days or missing data,
+            the 'DayOfWeek' value will be 0.
+
+    Note:
+        The 'Date' column should be set as the DataFrame index, and the data should be sorted in
+        chronological order based on the date for correct results.
+
+    Example:
+        >>> stock_data = pd.DataFrame({
+        ...     'Symbol':    ['AAPL',       'AAPL',       'AAPL',       'GOOGL',      'GOOGL',      'GOOGL',      'AAPL',     'AAPL',     'AAPL',     'AAPL',     'AAPL',     'AAPL'],
+        ...     'Date':      ['2022-01-03', '2022-01-04', '2022-01-05', '2022-01-03', '2022-01-04', '2022-01-06', 2023-01-17, 2023-01-18, 2023-01-19, 2023-02-21, 2023-02-22, 2023-02-23],
+        ...     'Adj Close': [180.05,       182.21,       None,         3100.0,       3095.5,       3134.0,       180.00,     181.00,     182.00,     183.00,     184.00,     185.00]
+        ... })
+        >>> stock_data.set_index('Date', inplace=True)
+        >>> result = add_trading_days_in_year(stock_data)
+        >>> print(result)
+                     Symbol  Adj Close  DayOfWeek
+        Date
+        2022-01-03    AAPL     180.05   1
+        2022-01-04    AAPL     182.21   2
+        2022-01-05    AAPL       NaN    3
+        2022-01-03   GOOGL    3100.00   1
+        2022-01-04   GOOGL    3095.50   2
+        2022-01-06   GOOGL    3134.00   4
+        2023-01-17    AAPL     180.00   2
+        2023-01-18    AAPL     181.00   3
+        2023-01-19    AAPL     182.00   4
+        2023-02-21    AAPL     183.00   2
+        2023-02-22    AAPL     184.00   3
+        2023-02-23    AAPL     185.00   4
+    """
+
+    # Extract the day of the week (0=Monday, 1=Tuesday, ..., 6=Sunday)
+    stock_data['DayOfWeek'] = stock_data.index.dayofweek
+
+    # Update the index name to 'Date' (if needed)
+    # stock_data.index.name = 'Date'
 
     return stock_data

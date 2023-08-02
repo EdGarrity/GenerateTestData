@@ -1,17 +1,5 @@
 """
-This program downloads stock data and adds the `TradingDaysInYear` field
-
-For each record in the downloaded stock data, add the following field:
-
-TradingDaysInYear
-    Calculate TradingDaysInYear by counting how many days the DataFrame has information for that stock in the given year from the first record to the last record for this stock for the year.
-
-Parameters:
-    None
-    
-Returns:
-    pd.DataFrame: A DataFrame with the stock data including the added temporal-related information.
-
+Add temporal data to the stock data.
 """
 import pandas as pd
 
@@ -59,7 +47,7 @@ def add_trading_days_in_year(stock_data: pd.DataFrame) -> pd.DataFrame:
         2022-01-06   GOOGL    3134.00                 2
     """
     # Group data by stock symbol and year
-    grouped_data = stock_data.groupby([stock_data.index.year, 'Symbol'])
+    grouped_data = stock_data.groupby([stock_data.index.year, 'Symbol'], group_keys=False)
 
     # Calculate TradingDaysInYear for each stock and year
     stock_data['TradingDaysInYear'] = grouped_data['Adj Close'].transform(lambda x: x.notnull().sum())
@@ -124,9 +112,47 @@ def add_trading_days_since_start_of_year(stock_data: pd.DataFrame) -> pd.DataFra
     stock_data['Year'] = pd.to_datetime(stock_data.index).year
 
     # Step 2: Group by 'Symbol' and 'Year' and calculate the number of trading days since the start of the year
-    stock_data['TradingDaysSinceStartOfYear'] = stock_data.groupby(['Symbol', 'Year'])['Adj Close'].apply(lambda x: x.notnull().cumsum())
+    stock_data['TradingDaysSinceStartOfYear'] = stock_data.groupby(['Symbol', 'Year'], group_keys=False)['Adj Close'].apply(lambda x: x.notnull().cumsum())
 
     # Drop the 'Year' column as it is no longer needed
     stock_data.drop(columns=['Year'], inplace=True)
+
+    return stock_data
+
+def add_trading_days_left_in_year(stock_data: pd.DataFrame) -> pd.DataFrame:
+    """
+    Adds temporal data to the input DataFrame.
+
+    The input stock_data DataFrame consists of stock information for several stocks from the first trading day of 1947 to the last trading day of 2022.  The DataFrame comtains many columns.  The name of the stock is in the 'Stock' column of the DataFrame.  The date is the row.name of the DataFrame
+
+    For each record in the DataFrame, this function will add the following field:
+
+    TradingDaysLeftInYear
+        The TradingDaysLeftInYear is calculated as TradingDaysInYear - TradingDaysSinceStartOfYear
+
+    Parameters:
+        stock_data (pd.DataFrame): The DataFrame containing stock market or financial data. The structure of the DataFrame is as follows:
+        'Stock': A string that represents the stock trading symbol
+        'Date': Column representing dates in a valid date format, compatible with the 'pd.to_datetime()' function
+
+    Returns:
+        pd.DataFrame: A DataFrame with the updated 'stock_data' including the added temporal-related information.
+
+    Example:
+
+        Suppose we have a DataFrame 'stock_data' with columns 'Stock' and 'Date', and we want to add temporal data to it. We can use the function as follows:
+
+        >>> stock_data = add_trading_days_in_year(stock_data)
+        >>> stock_data = add_trading_days_since_start_of_year(stock_data)
+        >>> stock_data = add_trading_days_left_in_year(stock_data)
+        >>> print(stock_data)
+
+    Note:
+        - The 'Date' column in the 'stock_data' DataFrame should be in a valid date format, compatible with the 'pd.to_datetime()' function used in this function.
+        - The 'stock_data' DataFrame will be modified in place to include the additional temporal data.
+        
+    """
+    # Calculate TradingDaysLeftInYear as TradingDaysInYear - TradingDaysSinceStartOfYear
+    stock_data['TradingDaysLeftInYear'] = stock_data['TradingDaysInYear'] - stock_data['TradingDaysSinceStartOfYear']
 
     return stock_data

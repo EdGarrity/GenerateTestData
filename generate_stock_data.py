@@ -18,9 +18,10 @@ if __name__ == '__main__':
     stock_data = src.temporal_data.add_trading_days_in_year(stock_data)
     stock_data = src.temporal_data.add_trading_days_since_start_of_year(stock_data)
     stock_data = src.temporal_data.add_trading_days_left_in_year(stock_data)
+    stock_data = src.temporal_data.add_trading_days_in_week(stock_data)
     test_data = src.kv_collection.load_stock_data(stock_data, test_data)
     test_data = src.add_gdp_data.add_gdp_data(test_data, 'gdp_data.csv')
     test_data = src.add_cpi_data.add_cpi_data(test_data, 'CPILFENS.csv')
-    src.kv_collection.save_to_sql(test_data)
+    # src.kv_collection.save_to_sql(test_data)
 
     print(stock_data)

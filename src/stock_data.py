@@ -182,7 +182,7 @@ def get():
     This program downloads stock data, normalizes the data, and saves it to a MS SQL database
     """
     # download data
-    stock_data = load_index_data(['AAPL', 'FXAIX', 'FNCMX'], '2019-01-01', '2021-12-31')
+    stock_data = load_index_data(['AAPL', 'FXAIX', 'FNCMX'], '1981-01-01', '2021-12-31')
 
     # save data to sql
     save_to_sql(stock_data)
